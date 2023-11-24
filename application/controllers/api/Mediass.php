@@ -12,6 +12,8 @@
 // ALTER TABLE `products` MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1; COMMIT;
 
 /**
+
+
  * Product class.
  * 
  * @extends REST_Controller
