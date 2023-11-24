@@ -1,5 +1,4 @@
 <?php
-
 /* Table structure for table `products` */
 // CREATE TABLE `products` (
 //   `id` int(10) UNSIGNED NOT NULL,
