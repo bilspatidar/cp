@@ -8,6 +8,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class User_model extends CI_Model {
 
+	protected $table      = 'users';
+	protected $primaryKey = 'users_id';
 	/**
 	 * __construct function.
 	 * 
@@ -18,6 +20,7 @@ class User_model extends CI_Model {
 		
 		parent::__construct();
 		$this->load->database();		
+		$this->load->model('merchant_keys_model');
 	}
 	
 	/**
@@ -30,9 +33,29 @@ class User_model extends CI_Model {
 	 * @return bool true on success, false on failure
 	 */
 	public function create_user($data) {
-		$this->db->insert('users', $data);
+		$this->db->insert($this->table, $data);
 		return $this->db->insert_id(); 
 	}
+	
+	public function update($data, $id)
+    {
+        $response = $this->db->update($this->table, $data, array($this->primaryKey=>$id));
+		return $this->db->affected_rows();
+    }
+	
+	public function delete($id)
+    {
+        $this->db->delete($this->table, array($this->primaryKey=>$id));
+        return $this->db->affected_rows();
+    }
+	public function delete_merchant($id)
+    {
+        $res = $this->db->delete($this->table, array($this->primaryKey=>$id));
+		if($res){
+			$this->db->delete('merchant_keys', array('merchant_id'=>$id));
+		}
+        return $this->db->affected_rows();
+    }
 	
 	/**
 	 * resolve_user_login function.

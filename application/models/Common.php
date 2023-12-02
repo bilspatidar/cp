@@ -288,6 +288,13 @@ return $result;
     return $this->db->get()->result();
 }
 
+public function GenerateLiveAPI(){
+$microTime = round(microtime(true) * 1000);
+$strong =  filter_var( ($microTime + 15 * 60 * 1000), FILTER_SANITIZE_NUMBER_INT);
+return password_hash($strong, PASSWORD_DEFAULT);
+
+   }
+
 
 }
 
