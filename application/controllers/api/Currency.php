@@ -39,7 +39,9 @@ class Currency extends REST_Controller {
 		$this->form_validation->set_rules('currency_name','Currency Name','trim|required|alpha_numeric_spaces|is_unique[currency.currency_name]');
 		$this->form_validation->set_rules('currency_code','Currency Code','trim|required|alpha_numeric');
 		if ($this->form_validation->run() === false) {
-			$array_error = array_map(fn($val) => str_replace(array("\r", "\n"), '', strip_tags($val)), array_filter(explode(".", trim(strip_tags(validation_errors())))));
+       $array_error = array_map(function ($val) {
+    return str_replace(array("\r", "\n"), '', strip_tags($val));
+}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
                     'message' =>'Error in submit form',
@@ -97,7 +99,9 @@ class Currency extends REST_Controller {
 		$this->form_validation->set_rules('symbol', 'Symbol', 'trim');
 		if ($this->form_validation->run() === false) {
 			
-			$array_error = array_map(fn($val) => str_replace(array("\r", "\n"), '', strip_tags($val)), array_filter(explode(".", trim(strip_tags(validation_errors())))));
+$array_error = array_map(function ($val) {
+    return str_replace(array("\r", "\n"), '', strip_tags($val));
+}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
                     'message' =>'Error in submit form',
@@ -133,6 +137,7 @@ class Currency extends REST_Controller {
 				// user creation ok
                 $final = array();
                 $final['status'] = true;
+				$final['data'] = $this->currency_model->get($id);
                 $final['message'] = 'Currency updated successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
