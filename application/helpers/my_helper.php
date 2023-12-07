@@ -180,23 +180,7 @@
 
 		
 	}
-	function is_authorized(){
-		$CI = get_instance();
-		$headers = $CI->input->request_headers(); 
-		if (isset($headers['Authorization'])) {		
-			
-			$decodedToken = $CI->authorization_token->validateToken($headers['Authorization']);
-            if ($decodedToken['status'])
-            {
-                return true;
-            } 
-            else {
-                return $CI->response($decodedToken);
-            }
-    	}else{
-    	   return $CI->response(['Authentication failed']);
-        }
-    }	
+		
 	function is_login($type=''){ 
         if(!empty($type)){
     	    if(isset($_SESSION['user_details']) && in_array($_SESSION['user_details'][0]->user_type,$type)){

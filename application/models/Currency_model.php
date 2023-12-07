@@ -38,4 +38,13 @@ class Currency_model extends CI_Model {
         return $this->db->affected_rows();
     }
 	
+	public function get($id=''){
+		$this->db->select("*");
+		$this->db->from($this->table);
+		if(!empty($id)){
+			$this->db->where($this->primaryKey,$id);
+		}
+		return $this->db->get()->result();
+		
+	}
 }

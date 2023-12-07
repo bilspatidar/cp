@@ -908,6 +908,33 @@ abstract class REST_Controller extends CI_Controller {
         $this->response($data, $http_code, TRUE);
     }
 
+
+    public function is_authorized($params=''){
+		$headers = $this->input->request_headers(); 
+		if (isset($headers['Authorization'])) {		
+			
+			$decodedToken = $this->authorization_token->validateToken($headers['Authorization']);
+			
+            if ($decodedToken['status'])
+            {
+				$usersData    = json_decode(json_encode($decodedToken), true);
+			    $user_type   =  $usersData['data']['user_type'];
+				if(!empty($params) && $params==$user_type){
+				  return $decodedToken;
+				}
+				else{
+				   return $this->response(['status' => FALSE, 'message' => 'You are not authorize to perform this action'], REST_Controller::HTTP_UNAUTHORIZED);
+				}
+            } 
+            else {
+                return $this->response($decodedToken, REST_Controller::HTTP_UNAUTHORIZED);
+            }
+    	}else{
+    	   return $this->response(['status' => FALSE, 'message' => 'Authentication failed'], REST_Controller::HTTP_UNAUTHORIZED);
+        }
+    }
+	
+	
     /**
      * Get the input format e.g. json or xml
      *
@@ -2348,4 +2375,6 @@ abstract class REST_Controller extends CI_Controller {
             exit;
         }
     }
+	
+		
 }

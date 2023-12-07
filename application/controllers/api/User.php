@@ -1,34 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/* On your database, open a SQL terminal paste this and execute: */
-// CREATE TABLE IF NOT EXISTS `users` (
-//   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-//   `username` varchar(255) NOT NULL DEFAULT '',
-//   `email` varchar(255) NOT NULL DEFAULT '',
-//   `password` varchar(255) NOT NULL DEFAULT '',
-//   `avatar` varchar(255) DEFAULT 'default.jpg',
-//   `created_at` datetime NOT NULL,
-//   `updated_at` datetime DEFAULT NULL,
-//   `is_admin` tinyint(1) unsigned NOT NULL DEFAULT '0',
-//   `is_confirmed` tinyint(1) unsigned NOT NULL DEFAULT '0',
-//   `is_deleted` tinyint(1) unsigned NOT NULL DEFAULT '0',
-//   PRIMARY KEY (`id`)
-// );
-// CREATE TABLE IF NOT EXISTS `ci_sessions` (
-//   `id` varchar(40) NOT NULL,
-//   `ip_address` varchar(45) NOT NULL,
-//   `timestamp` int(10) unsigned DEFAULT 0 NOT NULL,
-//   `data` blob NOT NULL,
-//   PRIMARY KEY (id),
-//   KEY `ci_sessions_timestamp` (`timestamp`)
-// );
-
-/**
- * User class.
- * 
- * @extends REST_Controller
- */
     require(APPPATH.'/libraries/REST_Controller.php');
     use Restserver\Libraries\REST_Controller;
 
@@ -42,11 +14,11 @@ class User extends REST_Controller {
 	 */
 	public function __construct() {
 		parent::__construct();
-        $this->load->library('Authorization_Token');
 		$this->load->model('user_model');
 		$this->load->model('merchant_keys_model');
 		$this->load->model('currency_model');
 		$this->load->model('payment_gateway_model');
+		header('Access-Control-Allow-Origin: *');
 	}
 
 	/**
@@ -86,14 +58,26 @@ class User extends REST_Controller {
 			$data['mobile']    = $this->input->post('mobile');
 			$data['password'] = password_hash($this->input->post('password'),PASSWORD_DEFAULT);
 			$data['added'] = date('Y-m-d H:i:s');
-			$data['status'] = 'Active';
-			$data['user_type'] = 'customer';
+			$data['status'] = 'Deactive';
+			$data['user_type'] = $this->input->post('user_type');
 			
 			if ($res = $this->user_model->create_user($data)) {
 				
 				// user creation ok
                 $token_data['users_id'] = $res; 
-                $token_data['username'] = $username;
+                $token_data['username'] = $data['email'];
+				
+				$token_data['user_id']      = (int)$res;
+				$token_data['user_type']      = (string)$data['user_type'];
+				$token_data['email']     = (string)$data['email'];
+				$token_data['name']     = (string)$data['name'];
+				$token_data['logged_in']    = (bool)true;
+				$token_data['status'] = (bool)$data['status'];
+				
+				
+				// user login ok
+
+				
                 $tokenData = $this->authorization_token->generateToken($token_data);
                 $final = array();
                 $final['access_token'] = $tokenData;
@@ -597,16 +581,26 @@ class User extends REST_Controller {
 				$users_id = $this->user_model->get_user_id_from_username($email);
 				$user    = $this->user_model->get_user($users_id);
 				
+				if($user->status=='Deactive'){
+					// login failed
+                $this->response(
+				[
+                    'status' => FALSE,
+                    'message' =>'Account is not active please contact to admin'
+                ]
+			  , REST_Controller::HTTP_UNAUTHORIZED);
+				}
 				// set session user datas
-				$_SESSION['user_id']      = (int)$user->users_id;
-				$_SESSION['email']     = (string)$user->email;
-				$_SESSION['name']     = (string)$user->name;
-				$_SESSION['logged_in']    = (bool)true;
-				$_SESSION['status'] = (bool)$user->status;
+				$token_data['user_id']      = (int)$user->users_id;
+				$token_data['user_type']      = (string)$user->user_type;
+				$token_data['email']     = (string)$user->email;
+				$token_data['name']     = (string)$user->name;
+				$token_data['logged_in']    = (bool)true;
+				$token_data['status'] = (bool)$user->status;
 				
 				
 				// user login ok
-                $token_data['users_id'] = $_SESSION['user_id'];
+                $token_data['users_id'] = $token_data['user_id'];
                 $token_data['username'] = $user->email; 
                 $tokenData = $this->authorization_token->generateToken($token_data);
                 $final = array();
@@ -624,8 +618,8 @@ class User extends REST_Controller {
 				[
                     'status' => FALSE,
                     'message' =>'Wrong email or password'
-              ]
-			  , REST_Controller::HTTP_OK);
+                ]
+			  , REST_Controller::HTTP_UNAUTHORIZED);
 				
 			}
 			
@@ -661,402 +655,7 @@ class User extends REST_Controller {
 		
 	}
 	
-	//currency start
-	public function currency_post($params='') {
-        
-		if($params=='add'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
-			
-		$_POST = json_decode($this->input->raw_input_stream, true);
-			
-		// set validation rules
-		$this->form_validation->set_rules('currency_name', 'Currency Name', 'trim|required|alpha_numeric_spaces');
-		$this->form_validation->set_rules('currency_code', 'currency_code', 'trim|required|alpha_numeric');
-		$this->form_validation->set_rules('symbol', 'Symbol', 'trim');
-		if ($this->form_validation->run() === false) {
-			
-			// validation not ok, send validation errors to the view
-            $this->response([
-                    'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
-			
-		} else {
-			
-			// set variables from the form
-			$currency_name = $this->input->post('currency_name');
-			if(!empty($currency_name)){
-				$data['currency_name'] = $currency_name;
-			}
-			$currency_code = $this->input->post('currency_code');
-			if(!empty($currency_code)){
-				$data['currency_code'] = $currency_code;
-			}
-			$symbol = $this->input->post('symbol');
-			if(!empty($symbol)){
-				$data['symbol'] = $symbol;
-			}
-			$data['status'] = 'Active';
-			$data['added'] = date('Y-m-d H:i:s');
-			$data['addedBy'] = $session_id;
-			
-			if ($res = $this->currency_model->create($data)) {
-				
-				// user creation ok
-				
-                $final = array();
-                $final['status'] = true;
-				$final['id'] = $res;
-                $final['message'] = 'Currency created successfully.';
-                $this->response($final, REST_Controller::HTTP_OK); 
-
-			} else {
-				
-				// user creation failed, this should never happen
-                $this->response(['There was a problem creating currency. Please try again.'], REST_Controller::HTTP_OK);
-			}
-			
-		}
-		}
-		if($params=='update'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
-			
-		$_POST = json_decode($this->input->raw_input_stream, true);
-		// set validation rules
-		$this->form_validation->set_rules('currency_name', 'Currency Name', 'trim|required|alpha_numeric_spaces');
-		$this->form_validation->set_rules('currency_code', 'currency_code', 'trim|required|alpha_numeric');
-		$this->form_validation->set_rules('symbol', 'Symbol', 'trim');
-		if ($this->form_validation->run() === false) {
-			
-			// validation not ok, send validation errors to the view
-            $this->response([
-                    'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
-			
-		} else {
-			
-			// set variables from the form
-			$currency_name = $this->input->post('currency_name');
-			if(!empty($currency_name)){
-				$data['currency_name'] = $currency_name;
-			}
-			$currency_code = $this->input->post('currency_code');
-			if(!empty($currency_code)){
-				$data['currency_code'] = $currency_code;
-			}
-			$symbol = $this->input->post('symbol');
-			if(!empty($symbol)){
-				$data['symbol'] = $symbol;
-			}
-			$status = $this->input->post('status');
-			if(!empty($status)){
-				$data['status'] = $status;
-			}
-			
-			$data['updatedBy'] = $session_id;
-			$data['updated'] = date('Y-m-d H:i:s');
-			$id = $this->input->post('id');
-			$res = $this->currency_model->update($data,$id);
-			if ($res) {
-				
-				// user creation ok
-                $final = array();
-                $final['status'] = true;
-                $final['message'] = 'Currency updated successfully.';
-                $this->response($final, REST_Controller::HTTP_OK); 
-
-			} else {
-				
-				// user creation failed, this should never happen
-                $this->response(['There was a problem updating currency. Please try again.'], REST_Controller::HTTP_OK);
-			}
-			
-		}
-		}
-	}
-	
-	public function currency_delete($id)
-    {
-        is_authorized();
-		
-        $response = $this->currency_model->delete($id);
-		if($response){
-			$this->response(['Currency deleted successfully.'], REST_Controller::HTTP_OK);
-		}else{
-			$this->response(['Not deleted'], REST_Controller::HTTP_OK);
-		}
-    }
-	//currency end
-	//payment gateways start
-	public function payment_gateway_post($params='') {
-        
-		if($params=='add'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
-			
-		$_POST = json_decode($this->input->raw_input_stream, true);
-			
-		// set validation rules
-		$this->form_validation->set_rules('name', 'Name', 'trim|required|alpha_numeric_spaces');
-		$this->form_validation->set_rules('short_name', 'Short Name', 'trim|alpha_numeric_spaces');
-		$this->form_validation->set_rules('live_api', 'Live Api', 'trim');
-		$this->form_validation->set_rules('live_secret', 'Live Secret', 'trim');
-		$this->form_validation->set_rules('test_api', 'Test Api', 'trim');
-		$this->form_validation->set_rules('test_secret', 'Test Secret', 'trim');
-		$this->form_validation->set_rules('test_url', 'Test Url', 'valid_url');
-		$this->form_validation->set_rules('live_url', 'Live Url', 'valid_url');
-		$this->form_validation->set_rules('daily_limit', 'Daily Limit', 'numeric');
-		$this->form_validation->set_rules('minLimit', 'Minimum Limit', 'numeric');
-		$this->form_validation->set_rules('maxLimit', 'Maximum Limit', 'numeric');
-		$this->form_validation->set_rules('range', 'Range', 'numeric');
-		$this->form_validation->set_rules('methodName', 'Method Name','trim|is_unique[payment_gateway.methodName]');
-		$this->form_validation->set_rules('currency[]','Currency', 'required');
-		if ($this->form_validation->run() === false) {
-			
-			// validation not ok, send validation errors to the view
-            $this->response([
-                    'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
-			
-		} else {
-			
-			// set variables from the form
-			$currency = $this->input->post('currency');
-			if(!empty($currency)){
-			$currencyCode = implode(',',$currency);
-			$data['currency']	= $currencyCode;
-			}
-			$cards = $this->input->post('cards');
-			if(!empty($cards)){
-			$cardsCode = implode(',',$cards);
-			$data['cards']	= $cardsCode;
-			}
-			$name = $this->input->post('name');
-			if(!empty($name)){
-				$data['name'] = $name;
-			}
-			$short_name = $this->input->post('short_name');
-			if(!empty($short_name)){
-				$data['short_name'] = $short_name;
-			}
-			$live_api = $this->input->post('live_api');
-			if(!empty($live_api)){
-				$data['live_api'] = $live_api;
-			}
-			$live_secret = $this->input->post('live_secret');
-			if(!empty($live_secret)){
-				$data['live_secret'] = $live_secret;
-			}
-			$test_api = $this->input->post('test_api');
-			if(!empty($test_api)){
-				$data['test_api'] = $test_api;
-			}
-			$test_secret = $this->input->post('test_secret');
-			if(!empty($test_secret)){
-				$data['test_secret'] = $test_secret;
-			}
-			$test_url = $this->input->post('test_url');
-			if(!empty($test_url)){
-				$data['test_url'] = $test_url;
-			}
-			$live_url = $this->input->post('live_url');
-			if(!empty($live_url)){
-				$data['live_url'] = $live_url;
-			}
-			$daily_limit = $this->input->post('daily_limit');
-			if(!empty($daily_limit)){
-				$data['daily_limit'] = $daily_limit;
-			}
-			$minLimit = $this->input->post('minLimit');
-			if(!empty($minLimit)){
-				$data['minLimit'] = $minLimit;
-			}
-			$maxLimit = $this->input->post('maxLimit');
-			if(!empty($maxLimit)){
-				$data['maxLimit'] = $maxLimit;
-			}
-			$range = $this->input->post('range');
-			if(!empty($range)){
-				$data['range'] = $range;
-			}
-			$blocked_country = $this->input->post('blocked_country');
-			if(!empty($blocked_country)){
-				$data['blocked_country'] = $blocked_country;
-			}
-			$methodName = $this->input->post('methodName');
-			if(!empty($methodName)){
-				$data['methodName'] = $methodName;
-			}
-			$data['encrypt_key'] = $this->Common->random_key_string();
-			$data['status'] = 'Active';
-			$data['added'] = date('Y-m-d H:i:s');
-			$data['addedBy'] = $session_id;
-			
-			if ($res = $this->payment_gateway_model->create($data)) {
-				
-				// user creation ok
-				
-                $final = array();
-                $final['status'] = true;
-				$final['id'] = $res;
-                $final['message'] = 'Payment Gateway created successfully.';
-                $this->response($final, REST_Controller::HTTP_OK); 
-
-			} else {
-				
-				// user creation failed, this should never happen
-                $this->response(['There was a problem creating payment gateway. Please try again.'], REST_Controller::HTTP_OK);
-			}
-			
-		}
-		}
-		if($params=='update'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
-			
-		$_POST = json_decode($this->input->raw_input_stream, true);
-		// set validation rules
-		$this->form_validation->set_rules('name', 'Name', 'trim|required|alpha_numeric_spaces');
-		$this->form_validation->set_rules('short_name', 'Short Name', 'trim|alpha_numeric_spaces');
-		$this->form_validation->set_rules('live_api', 'Live Api', 'trim');
-		$this->form_validation->set_rules('live_secret', 'Live Secret', 'trim');
-		$this->form_validation->set_rules('test_api', 'Test Api', 'trim');
-		$this->form_validation->set_rules('test_secret', 'Test Secret', 'trim');
-		$this->form_validation->set_rules('test_url', 'Test Url', 'valid_url');
-		$this->form_validation->set_rules('live_url', 'Live Url', 'valid_url');
-		$this->form_validation->set_rules('daily_limit', 'Daily Limit', 'numeric');
-		$this->form_validation->set_rules('minLimit', 'Minimum Limit', 'numeric');
-		$this->form_validation->set_rules('maxLimit', 'Maximum Limit', 'numeric');
-		$this->form_validation->set_rules('range', 'Range', 'numeric');
-		$this->form_validation->set_rules('methodName', 'Method Name','trim');
-		$this->form_validation->set_rules('currency[]','Currency', 'required');
-		if ($this->form_validation->run() === false) {
-			
-			// validation not ok, send validation errors to the view
-            $this->response([
-                    'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
-			
-		} else {
-			
-			// set variables from the form
-			$currency = $this->input->post('currency');
-			if(!empty($currency)){
-			$currencyCode = implode(',',$currency);
-			$data['currency']	= $currencyCode;
-			}
-			$cards = $this->input->post('cards');
-			if(!empty($cards)){
-			$cardsCode = implode(',',$cards);
-			$data['cards']	= $cardsCode;
-			}
-			$name = $this->input->post('name');
-			if(!empty($name)){
-				$data['name'] = $name;
-			}
-			$short_name = $this->input->post('short_name');
-			if(!empty($short_name)){
-				$data['short_name'] = $short_name;
-			}
-			$live_api = $this->input->post('live_api');
-			if(!empty($live_api)){
-				$data['live_api'] = $live_api;
-			}
-			$live_secret = $this->input->post('live_secret');
-			if(!empty($live_secret)){
-				$data['live_secret'] = $live_secret;
-			}
-			$test_api = $this->input->post('test_api');
-			if(!empty($test_api)){
-				$data['test_api'] = $test_api;
-			}
-			$test_secret = $this->input->post('test_secret');
-			if(!empty($test_secret)){
-				$data['test_secret'] = $test_secret;
-			}
-			$test_url = $this->input->post('test_url');
-			if(!empty($test_url)){
-				$data['test_url'] = $test_url;
-			}
-			$live_url = $this->input->post('live_url');
-			if(!empty($live_url)){
-				$data['live_url'] = $live_url;
-			}
-			$daily_limit = $this->input->post('daily_limit');
-			if(!empty($daily_limit)){
-				$data['daily_limit'] = $daily_limit;
-			}
-			$minLimit = $this->input->post('minLimit');
-			if(!empty($minLimit)){
-				$data['minLimit'] = $minLimit;
-			}
-			$maxLimit = $this->input->post('maxLimit');
-			if(!empty($maxLimit)){
-				$data['maxLimit'] = $maxLimit;
-			}
-			$range = $this->input->post('range');
-			if(!empty($range)){
-				$data['range'] = $range;
-			}
-			$blocked_country = $this->input->post('blocked_country');
-			if(!empty($blocked_country)){
-				$data['blocked_country'] = $blocked_country;
-			}
-			$methodName = $this->input->post('methodName');
-			if(!empty($methodName)){
-				$data['methodName'] = $methodName;
-			}
-			$status = $this->input->post('status');
-			if(!empty($status)){
-				$data['status'] = $status;
-			}
-			
-			$data['updatedBy'] = $session_id;
-			$data['updated'] = date('Y-m-d H:i:s');
-			$id = $this->input->post('id');
-			$res = $this->payment_gateway_model->update($data,$id);
-			if ($res) {
-				
-				// user creation ok
-                $final = array();
-                $final['status'] = true;
-                $final['message'] = 'Payment Gateway updated successfully.';
-                $this->response($final, REST_Controller::HTTP_OK); 
-
-			} else {
-				
-				// user creation failed, this should never happen
-                $this->response(['There was a problem updating payment gateway. Please try again.'], REST_Controller::HTTP_OK);
-			}
-			
-		}
-		}
-	}
-	
-	public function payment_gateway_delete($id)
-    {
-        is_authorized();
-		
-        $response = $this->payment_gateway_model->delete($id);
-		if($response){
-			$this->response(['Payment Gateway deleted successfully.'], REST_Controller::HTTP_OK);
-		}else{
-			$this->response(['Not deleted'], REST_Controller::HTTP_OK);
-		}
-    }
-	//payment gateways end
 	
 }
+
+?>

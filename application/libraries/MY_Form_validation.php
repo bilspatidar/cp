@@ -2,6 +2,13 @@
 
 class MY_Form_validation extends CI_Form_validation{
 
+
+    function get_error_array()
+		{
+			return $this->_error_array;
+		}
+		
+	
     public function edit_unique000($str, $field)
     {
         sscanf($field, '%[^.].%[^.].%[^.]', $table, $field, $id);
