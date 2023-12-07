@@ -10,6 +10,8 @@ class User_model extends CI_Model {
 
 	protected $table      = 'users';
 	protected $primaryKey = 'users_id';
+	protected $merchant_keys = 'merchant_keys';
+	protected $merchant_id = 'merchant_id';
 	/**
 	 * __construct function.
 	 * 
@@ -20,7 +22,7 @@ class User_model extends CI_Model {
 		
 		parent::__construct();
 		$this->load->database();		
-		$this->load->model('merchant_keys_model');
+		
 	}
 	
 	/**
@@ -48,11 +50,26 @@ class User_model extends CI_Model {
         $this->db->delete($this->table, array($this->primaryKey=>$id));
         return $this->db->affected_rows();
     }
+	
+	public function get($user_type,$id=''){
+		$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->merchant_keys.api_key,$this->table.status");
+		$this->db->from($this->table);
+		if($user_type=='merchant'){
+			$this->db->join($this->merchant_keys,"$this->merchant_keys.$this->merchant_id=$this->table.$this->primaryKey");
+		}
+		$this->db->where("$this->table.user_type",$user_type);
+		if(!empty($id)){
+			$this->db->where($this->table.'.'.$this->primaryKey,$id);
+		}
+		return $this->db->get()->result();
+		
+	}
+	
 	public function delete_merchant($id)
     {
         $res = $this->db->delete($this->table, array($this->primaryKey=>$id));
 		if($res){
-			$this->db->delete('merchant_keys', array('merchant_id'=>$id));
+			$this->db->delete($this->merchant_keys, array($this->merchant_id=>$id));
 		}
         return $this->db->affected_rows();
     }

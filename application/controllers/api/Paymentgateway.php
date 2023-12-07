@@ -17,13 +17,20 @@ class Paymentgateway extends REST_Controller {
 	}
 	
 	//payment gateways start
+	public function payment_gateway_get($id=''){   ///list data
+		$getTokenData = $this->is_authorized('superadmin');
+		$final = array();
+		$final['status'] = true;
+		$final['data'] = $this->Payment_gateway_model->get($id);
+		$final['message'] = 'Payment gateway fetched successfully.';
+		$this->response($final, REST_Controller::HTTP_OK); 
+	}	
 	public function payment_gateway_post($params='') {
         
 		if($params=='add'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 			
@@ -45,10 +52,14 @@ class Paymentgateway extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -124,29 +135,31 @@ class Paymentgateway extends REST_Controller {
 			$data['added'] = date('Y-m-d H:i:s');
 			$data['addedBy'] = $session_id;
 			
-			if ($res = $this->payment_gateway_model->create($data)) {
+			if ($res = $this->Payment_gateway_model->create($data)) {
 				
 				// user creation ok
 				
                 $final = array();
                 $final['status'] = true;
-				$final['id'] = $res;
+				$final['data'] = $this->Payment_gateway_model->get($res);
                 $final['message'] = 'Payment Gateway created successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem creating payment gateway. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'Error in submit form',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
 		}
 		if($params=='update'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 		// set validation rules
@@ -167,10 +180,14 @@ class Paymentgateway extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -249,19 +266,22 @@ class Paymentgateway extends REST_Controller {
 			$data['updatedBy'] = $session_id;
 			$data['updated'] = date('Y-m-d H:i:s');
 			$id = $this->input->post('id');
-			$res = $this->payment_gateway_model->update($data,$id);
+			$res = $this->Payment_gateway_model->update($data,$id);
 			if ($res) {
 				
 				// user creation ok
                 $final = array();
                 $final['status'] = true;
+				$final['data'] = $this->Payment_gateway_model->get($id);
                 $final['message'] = 'Payment Gateway updated successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem updating payment gateway. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem updating payment gateway. Please try again',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
@@ -270,13 +290,13 @@ class Paymentgateway extends REST_Controller {
 	
 	public function payment_gateway_delete($id)
     {
-        is_authorized();
+        $this->is_authorized('superadmin');
 		
-        $response = $this->payment_gateway_model->delete($id);
+        $response = $this->Payment_gateway_model->delete($id);
 		if($response){
-			$this->response(['Payment Gateway deleted successfully.'], REST_Controller::HTTP_OK);
+			$this->response(['status' => true, 'message' => 'Payment Gateway deleted successfully.'], REST_Controller::HTTP_OK);
 		}else{
-			$this->response(['Not deleted'], REST_Controller::HTTP_OK);
+			$this->response(['status' => false, 'message' => 'Not deleted'], REST_Controller::HTTP_BAD_REQUEST);
 		}
     }
 	//payment gateways end

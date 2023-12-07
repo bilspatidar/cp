@@ -5,9 +5,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * 
  * @extends CI_Model
  */
-class Merchant_keys_model extends CI_Model {
+class Merchant_payment_link extends CI_Model {
 
-	protected $table      = 'merchant_keys';
+	protected $table      = 'merchant_payment_link';
 	protected $primaryKey = 'id';
 	/**
 	 * __construct function.
