@@ -16,8 +16,7 @@ class User extends REST_Controller {
 		parent::__construct();
 		$this->load->model('user_model');
 		$this->load->model('merchant_keys_model');
-		$this->load->model('currency_model');
-		$this->load->model('payment_gateway_model');
+		$this->load->model('merchant_payment_link');
 		header('Access-Control-Allow-Origin: *');
 	}
 
@@ -45,10 +44,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+           $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -62,6 +65,14 @@ class User extends REST_Controller {
 			$data['user_type'] = $this->input->post('user_type');
 			
 			if ($res = $this->user_model->create_user($data)) {
+				if($data['user_type']=='merchant'){
+				$data2['merchant_id'] = $res;
+				$data2['title'] = 'Api-keys';
+				$data2['api_key'] = $this->Common->GenerateLiveAPI();
+				$data2['added'] = date('Y-m-d H:i:s');
+				$data2['added_by'] = $res;
+				$this->merchant_keys_model->create($data2);
+				}
 				
 				// user creation ok
                 $token_data['users_id'] = $res; 
@@ -76,7 +87,8 @@ class User extends REST_Controller {
 				
 				
 				// user login ok
-
+				
+				
 				
                 $tokenData = $this->authorization_token->generateToken($token_data);
                 $final = array();
@@ -91,7 +103,9 @@ class User extends REST_Controller {
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem creating your new account. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem creating your new account. Please try again',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
@@ -99,13 +113,23 @@ class User extends REST_Controller {
 	}
 	
 	//merchant start
+	public function merchant_list_get($id=''){
+		$getTokenData = $this->is_authorized('superadmin');
+		
+		$user_type = 'merchant';
+		$final = array();
+		$final['status'] = true;
+		$final['data'] = $this->user_model->get($user_type,$id);
+		$final['message'] = 'Merchant fetched successfully.';
+		$this->response($final, REST_Controller::HTTP_OK); 
+
+	}
 	public function merchant_post($params='') {
         
 		if($params=='add'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 			
@@ -121,10 +145,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -216,23 +244,24 @@ class User extends REST_Controller {
 
                 $final = array();
                 $final['status'] = true;
-				$final['users_id'] = $res;
+				$final['data'] = $this->user_model->get('merchant',$res);
                 $final['message'] = 'Thank you for registering your new account!';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem creating your new account. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'Error in submit form',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
 		}
 		if($params=='update'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 		$check = $this->input->post('check');
@@ -249,10 +278,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -340,13 +373,16 @@ class User extends REST_Controller {
 				// user creation ok
                 $final = array();
                 $final['status'] = true;
+				$final['data'] = $this->user_model->get('merchant',$users_id);
                 $final['message'] = 'Merchant updated successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem updating merchant. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem updating merchant. Please try again',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
@@ -355,23 +391,31 @@ class User extends REST_Controller {
 	
 	public function merchant_delete($id)
     {
-        is_authorized();
+        $this->is_authorized('superadmin');
 		
         $response = $this->user_model->delete_merchant($id);
+	
 		if($response){
-			$this->response(['Merchant deleted successfully.'], REST_Controller::HTTP_OK);
+			$this->response(['status' => true, 'message' => 'Merchant deleted successfully.'], REST_Controller::HTTP_OK);
 		}else{
-			$this->response(['Not deleted'], REST_Controller::HTTP_OK);
+			$this->response(['status' => false, 'message' => 'Not deleted'], REST_Controller::HTTP_BAD_REQUEST);
 		}
     }
 	
+	public function merchant_keys_get($id=''){
+		$getTokenData = $this->is_authorized('superadmin');
+		$final = array();
+		$final['status'] = true;
+		$final['data'] = $this->merchant_keys_model->get($id);
+		$final['message'] = 'Merchant Keys fetched successfully.';
+		$this->response($final, REST_Controller::HTTP_OK);
+	}
 	public function merchant_keys_post($params='') {
         
 		if($params=='add'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 			
@@ -382,10 +426,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -412,23 +460,24 @@ class User extends REST_Controller {
 				
                 $final = array();
                 $final['status'] = true;
-				$final['id'] = $res;
+				$final['data'] = $this->merchant_keys_model->get($res);
                 $final['message'] = 'Merchant keys created successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem creating merchant keys. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'Error in submit form',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
 		}
 		if($params=='update'){
-			is_authorized();
-			$getTokenData = $this->authorization_token->validateToken();
-			$usersData = json_decode(json_encode($getTokenData), true);
-			$session_id =  $usersData['data']['users_id'];
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
 			
 		$_POST = json_decode($this->input->raw_input_stream, true);
 		// set validation rules
@@ -438,10 +487,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK,'','error');
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			
 		} else {
 			
@@ -468,30 +521,203 @@ class User extends REST_Controller {
 				// user creation ok
                 $final = array();
                 $final['status'] = true;
+				$final['data'] = $this->merchant_keys_model->get($id);
                 $final['message'] = 'Merchant keys updated successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
 			} else {
 				
 				// user creation failed, this should never happen
-                $this->response(['There was a problem updating merchant keys. Please try again.'], REST_Controller::HTTP_OK);
+				$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem updating merchant keys. Please try again',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 			}
 			
 		}
 		}
 	}
-	
 	public function merchant_keys_delete($id)
     {
-        is_authorized();
+        $this->is_authorized('superadmin');
 		
         $response = $this->merchant_keys_model->delete($id);
 		if($response){
-			$this->response(['Merchant keys deleted successfully.'], REST_Controller::HTTP_OK);
+			$this->response(['status' => true, 'message' => 'Merchant keys deleted successfully.'], REST_Controller::HTTP_OK);
 		}else{
-			$this->response(['Not deleted'], REST_Controller::HTTP_OK);
+			$this->response(['status' => false, 'message' => 'Not deleted'], REST_Controller::HTTP_BAD_REQUEST);
 		}
     }
+	
+	public function merchant_payment_link_get($id=''){
+		$getTokenData = $this->is_authorized('superadmin');
+		$final = array();
+		$final['status'] = true;
+		$final['data'] = $this->merchant_payment_link->get($id);
+		$final['message'] = 'Merchant payment link fetched successfully.';
+		$this->response($final, REST_Controller::HTTP_OK);
+	}
+	public function merchant_payment_link_post($params='') {
+        
+		if($params=='add'){
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
+			
+		$_POST = json_decode($this->input->raw_input_stream, true);
+			
+		// set validation rules
+		$this->form_validation->set_rules('merchant_id', 'Merchant Id', 'trim|required|numeric');
+		$this->form_validation->set_rules('payment_id', 'Payment Id', 'required|numeric');
+		$this->form_validation->set_rules('currency[]','Currency', 'required');
+		$this->form_validation->set_rules('mid','MID','trim');
+		if ($this->form_validation->run() === false) {
+			
+			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
+            $this->response([
+                    'status' => FALSE,
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
+			
+		} else {
+			
+			// set variables from the form
+			$currency = $this->input->post('currency');
+			if(!empty($currency)){
+			$currencyCode = implode(',',$currency);
+			$data['currency']	= $currencyCode;
+			}
+			$cards = $this->input->post('cards');
+			if(!empty($cards)){
+			$cardsCode = implode(',',$cards);
+			$data['cards']	= $cardsCode;
+			}
+			$mid = $this->input->post('mid');
+			if(!empty($mid)){
+				$data['mid'] = $mid;
+			}
+			$payment_id = $this->input->post('payment_id');
+			if(!empty($payment_id)){
+				$data['payment_id'] = $payment_id;
+			}
+			$merchant_id = $this->input->post('merchant_id');
+			if(!empty($merchant_id)){
+				$data['merchant_id'] = $merchant_id;
+			}
+			$data['status'] = 'Active';
+			$data['added'] = date('Y-m-d H:i:s');
+			$data['addedBy'] = $session_id;
+			
+			if ($res = $this->merchant_payment_link->create($data)) {
+				
+				// user creation ok
+				
+                $final = array();
+                $final['status'] = true;
+				$final['data'] = $this->merchant_payment_link->get($res);
+                $final['message'] = 'Merchant payment link created successfully.';
+                $this->response($final, REST_Controller::HTTP_OK); 
+
+			} else {
+				
+				// user creation failed, this should never happen
+				$this->response([ 'status' => FALSE,
+                    'message' =>'Error in submit form',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
+			}
+			
+		}
+		}
+		if($params=='update'){
+			$getTokenData = $this->is_authorized('superadmin');
+			$usersData    = json_decode(json_encode($getTokenData), true);
+			$session_id   =  $usersData['data']['users_id'];
+			
+		$_POST = json_decode($this->input->raw_input_stream, true);
+		// set validation rules
+		$this->form_validation->set_rules('merchant_id', 'Merchant Id', 'trim|required|numeric');
+		$this->form_validation->set_rules('payment_id', 'Payment Id', 'required|numeric');
+		$this->form_validation->set_rules('mid','MID','trim');
+		if ($this->form_validation->run() === false) {
+			
+			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
+            $this->response([
+                    'status' => FALSE,
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
+			
+		} else {
+			
+			// set variables from the form
+			$currency = $this->input->post('currency');
+			if(!empty($currency)){
+			$currencyCode = implode(',',$currency);
+			$data['currency']	= $currencyCode;
+			}
+			$cards = $this->input->post('cards');
+			if(!empty($cards)){
+			$cardsCode = implode(',',$cards);
+			$data['cards']	= $cardsCode;
+			}
+			$mid = $this->input->post('mid');
+			if(!empty($mid)){
+				$data['mid'] = $mid;
+			}
+			$payment_id = $this->input->post('payment_id');
+			if(!empty($payment_id)){
+				$data['payment_id'] = $payment_id;
+			}
+			$merchant_id = $this->input->post('merchant_id');
+			if(!empty($merchant_id)){
+				$data['merchant_id'] = $merchant_id;
+			}
+			$status = $this->input->post('status');
+			if(!empty($status)){
+				$data['status'] = $status;
+			}
+			$data['updatedBy'] = $session_id;
+			$data['updated'] = date('Y-m-d H:i:s');
+			$id = $this->input->post('id');
+			$res = $this->merchant_payment_link->update($data,$id);
+			if ($res) {
+				
+				// user creation ok
+                $final = array();
+                $final['status'] = true;
+				$final['data'] = $this->merchant_payment_link->get($id);
+                $final['message'] = 'Merchant payment link updated successfully.';
+                $this->response($final, REST_Controller::HTTP_OK); 
+
+			} else {
+				
+				// user creation failed, this should never happen
+				$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem updating merchant payment link. Please try again',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
+			}
+			
+		}
+		}
+	}
+	public function merchant_payment_link_delete($id)
+    {
+        $this->is_authorized('superadmin');
+		
+        $response = $this->merchant_payment_link->delete($id);
+		if($response){
+			$this->response(['status' => true, 'message' => 'Merchant Payment Link deleted successfully.'], REST_Controller::HTTP_OK);
+		}else{
+			$this->response(['status' => false, 'message' => 'Not deleted'], REST_Controller::HTTP_BAD_REQUEST);
+		}
+    }
+	
 	//merchant end
 	
 	public function valid_password($password = '')
@@ -565,10 +791,14 @@ class User extends REST_Controller {
 		if ($this->form_validation->run() == false) {
 			
 			// validation not ok, send validation errors to the view
+            $array_error = array_map(function ($val) {
+				return str_replace(array("\r", "\n"), '', strip_tags($val));
+			}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
             $this->response([
                     'status' => FALSE,
-                    'message' =>strip_tags(str_replace(array("\r", "\n"), '', validation_errors()))
-              ], REST_Controller::HTTP_OK);
+					'errors' =>$array_error,
+                    'message' =>'Error in submit form'
+              ], REST_Controller::HTTP_BAD_REQUEST,'','error');
 
 		} else {
 			
@@ -643,14 +873,16 @@ class User extends REST_Controller {
 			}
 			
 			// user logout ok
-            $this->response(['Logout success!'], REST_Controller::HTTP_OK);
+			$this->response(['status' => true, 'message' => 'Logout success!'], REST_Controller::HTTP_OK);
 			
 		} else {
 			
 			// there user was not logged in, we cannot logged him out,
 			// redirect him to site root
 			// redirect('/');
-            $this->response(['There was a problem. Please try again.'], REST_Controller::HTTP_OK);	
+			$this->response([ 'status' => FALSE,
+                    'message' =>'There was a problem. Please try again.',
+					'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
 		}
 		
 	}
