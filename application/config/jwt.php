@@ -21,7 +21,7 @@ $config['jwt_algorithm'] = 'HS256';
 | Token Request Header Name
 |--------------------------------------------------------------------------
 */
-$config['token_header'] = 'authorization';
+$config['token_header'] = 'token';
 
 
 /*
