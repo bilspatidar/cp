@@ -13,11 +13,18 @@ class User extends REST_Controller {
 	 * @return void
 	 */
 	public function __construct() {
-		parent::__construct();
+    $this->cors_header();
+    parent::__construct();
+		
 		$this->load->model('user_model');
 		$this->load->model('merchant_keys_model');
+
 		$this->load->model('merchant_payment_link');
 		header('Access-Control-Allow-Origin: *');
+
+		$this->load->model('currency_model');
+		$this->load->model('payment_gateway_model');
+		
 	}
 
 	/**
