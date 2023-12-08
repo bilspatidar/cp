@@ -11,9 +11,9 @@ class Paymentgateway extends REST_Controller {
      * @return Response
     */
     public function __construct() {
+	   $this->cors_header();
        parent::__construct();
        $this->load->model('Payment_gateway_model');
-	   header('Access-Control-Allow-Origin: *');
 	}
 	
 	//payment gateways start
