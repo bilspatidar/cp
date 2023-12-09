@@ -20,4 +20,4 @@ jobs:
         run: ssh-keyscan -H 103.145.50.241 >> ~/.ssh/known_hosts
 
       - name: Deploy code to VPS
-        run: scp -r ./ omsaitiffin@103.145.50.241:/home/omsaitiffin/cp_sparkhub_in
+        run: scp -r ./* omsaitiffin@103.145.50.241:/home/omsaitiffin/cp_sparkhub_in
