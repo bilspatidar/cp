@@ -1,7 +1,7 @@
 <?php
 
 
-//okay oku
+//okay oku bla bla bla
 class Home extends CI_Controller {
     
 	  /**
