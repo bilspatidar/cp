@@ -1,7 +1,7 @@
 <?php
 
 
-//deploy ok oksss okkk
+//deploy ok oksss okkk mmm
 class Home extends CI_Controller {
     
 	  /**
