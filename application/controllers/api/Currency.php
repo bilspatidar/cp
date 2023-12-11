@@ -118,7 +118,7 @@ $array_error = array_map(function ($val) {
 			if(!empty($currency_code)){
 				$data['currency_code'] = $currency_code;
 			}
-		
+
 			$status = $this->input->post('status');
 			if(!empty($status)){
 				$data['status'] = $status;
