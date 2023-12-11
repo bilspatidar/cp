@@ -5,7 +5,7 @@
 | JWT Secure Key
 |--------------------------------------------------------------------------
 */
-$config['jwt_key'] = 'enMB8ms2Nh8RNz7nRKrGTiMRG9aRPp8G5d';
+$config['jwt_key'] = 'enMB8ms2Nh8RNz7nRKrGTiMRG9aRPp8G5d78787dddd';
 
 
 /*
@@ -34,4 +34,5 @@ $config['token_header'] = 'token';
 | ( 1 Hour ) : 60 * 60     = 3600
 | ( 1 Minute ) : 60        = 60
 */
+
 $config['token_expire_time'] = 7200;

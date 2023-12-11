@@ -330,7 +330,7 @@ abstract class REST_Controller extends CI_Controller {
      *
      * @var bool
      */
-    protected $check_cors = NULL;
+    protected $check_cors = TRUE;
 
     /**
      * Enable XSS flag
@@ -385,8 +385,8 @@ abstract class REST_Controller extends CI_Controller {
 	 
 	public function cors_header(){
 	header('Access-Control-Allow-Origin: *');
-    header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+    header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Token, token");
+    header("Access-Control-Allow-Methods: *");
     $method = $_SERVER['REQUEST_METHOD'];
     if($method == "OPTIONS") {
         die();
@@ -921,8 +921,9 @@ abstract class REST_Controller extends CI_Controller {
 
     public function is_authorized($params=''){
 		$headers = $this->input->request_headers(); 
-		if (isset($headers['Token'])) {		 //here
-			
+
+		if (isset($headers['Token'])) {		
+
 			$decodedToken = $this->authorization_token->validateToken($headers['Token']);
 			
             if ($decodedToken['status'])
