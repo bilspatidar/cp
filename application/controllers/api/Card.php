@@ -11,9 +11,9 @@ class Card extends REST_Controller {
      * @return Response
     */
     public function __construct() {
+       $this->cors_header();
        parent::__construct();
        $this->load->model('card_model');
-	   header('Access-Control-Allow-Origin: *');
 	}
 
 	
