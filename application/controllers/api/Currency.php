@@ -22,7 +22,7 @@ class Currency extends REST_Controller {
 		$getTokenData = $this->is_authorized('superadmin');
 		$final = array();
                 $final['status'] = true;
-				$final['data'] = $this->currency_model->get($id);
+				$final['data'] = 	$this->currency_model->get($id);
                 $final['message'] = 'Currency fetched successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 	}	
@@ -96,7 +96,6 @@ class Currency extends REST_Controller {
 		// set validation rules
 		$this->form_validation->set_rules('currency_name', 'Currency Name', 'trim|required|alpha_numeric_spaces');
 		$this->form_validation->set_rules('currency_code', 'currency_code', 'trim|required|alpha_numeric');
-		$this->form_validation->set_rules('symbol', 'Symbol', 'trim');
 		if ($this->form_validation->run() === false) {
 			
 $array_error = array_map(function ($val) {
@@ -119,10 +118,7 @@ $array_error = array_map(function ($val) {
 			if(!empty($currency_code)){
 				$data['currency_code'] = $currency_code;
 			}
-			$symbol = $this->input->post('symbol');
-			if(!empty($symbol)){
-				$data['symbol'] = $symbol;
-			}
+		
 			$status = $this->input->post('status');
 			if(!empty($status)){
 				$data['status'] = $status;
