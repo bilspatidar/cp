@@ -103,7 +103,8 @@ class User extends REST_Controller {
                 $final['status'] = true;
                 $final['users_id'] = $res;
                 $final['message'] = 'Thank you for registering your new account!';
-                //$final['note'] = 'You have successfully register. Please check your email inbox to confirm your email address.';
+                $final['note'] = 'You have successfully register.';
+                $final['user_type'] = $token_data['user_type'];
 
                 $this->response($final, REST_Controller::HTTP_OK); 
 
@@ -845,6 +846,7 @@ class User extends REST_Controller {
                 $final['status'] = true;
                 $final['message'] = 'Login success!';
                 $final['note'] = 'You are now logged in.';
+				$final['user_type'] = $token_data['user_type'];
 
                 $this->response($final, REST_Controller::HTTP_OK); 
 				
