@@ -52,7 +52,11 @@ class User_model extends CI_Model {
     }
 	
 	public function get($user_type,$id=''){
-		$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->merchant_keys.api_key,$this->table.status");
+		if($user_type=='merchant'){
+			$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->merchant_keys.api_key,$this->table.status");
+		}else{
+			$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->table.status");
+		}
 		$this->db->from($this->table);
 		if($user_type=='merchant'){
 			$this->db->join($this->merchant_keys,"$this->merchant_keys.$this->merchant_id=$this->table.$this->primaryKey");
