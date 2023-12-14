@@ -962,6 +962,100 @@ class User extends REST_Controller {
 					 
 				   }
 				}
+		    }	
+	    }
+
+		public function profile_update_post($params=""){
+			{
+				$getTokenData = $this->is_authorized('superadmin');
+				$usersData = json_decode(json_encode($getTokenData), true);
+				$session_id = $usersData['data']['users_id'];
+		
+				$_POST = json_decode($this->input->raw_input_stream, true);
+		
+				// set validation rules
+				$this->form_validation->set_rules('full_name', 'Full Name', 'trim|required|alpha_numeric_spaces|min_length[3]');
+				$this->form_validation->set_rules('email', 'Email', 'trim|required');
+				$this->form_validation->set_rules('mobile', 'Mobile Number', 'trim|required|min_length[10]');
+				$this->form_validation->set_rules('address', 'Address', 'trim|required');
+				$this->form_validation->set_rules('company_name', 'Company Name', 'trim|required');
+				// Add additional validation rules for new fields like company, address, and image
+		
+				// Callback function for custom image validation
+				// $this->form_validation->set_rules('image', 'Image', 'callback_validate_image');
+		
+				if ($this->form_validation->run() === false) {
+					// validation not ok, send validation errors to the view
+					$array_error = array_map(function ($val) {
+						return str_replace(array("\r", "\n"), '', strip_tags($val));
+					}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
+		
+					$this->response([
+						'status' => FALSE,
+						'errors' => $array_error,
+						'message' => 'Error in submit form'
+					], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+				} else {
+					// set variables from the form
+					$data['name'] = $this->input->post('full_name');
+					$data['company_name'] = $this->input->post('company_name');
+					$data['address'] = $this->input->post('address');
+					$data['mobile'] = $this->input->post('mobile');
+					$data['email'] = $this->input->post('email');
+					$users_id = $this->input->post('users_id');
+					// Handle image upload
+					//$image_data = base64_decode(str_replace('data:image/jpeg;base64,', '', $base64_image));
+					if (!empty($_POST['image'])) {
+						$base64_image = $_POST['image'];
+						
+						$image_data = base64_decode($base64_image);
+						$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
+						$imageName = $preName."_".time().'.png';
+						
+						$uploads_dir = 'uploads/users/';
+						if(!file_exists($uploads_dir)) {
+							mkdir($uploads_dir, 0777, true);  //create directory if not exist
+						}
+							$imageFullPath = $uploads_dir.$imageName;
+						if(file_put_contents($imageFullPath,$image_data)){
+							$data['profile_pic'] =  $imageName;
+							$imgData = $this->db->get_where('users',array('users_id'=>$users_id));
+							if($imgData->num_rows()>0){
+								$profile_pic =  $imgData->row()->profile_pic;
+								$load_url2 = $uploads_dir.$profile_pic;
+								if(file_exists($load_url2) && !empty($profile_pic))
+								{
+									unlink($uploads_dir.$profile_pic);		
+								}
+							}
+						}
+					}
+					
+					// populate $data array with the values from the form fields
+					$data['updatedBy'] = $session_id;
+					$data['updated'] = date('Y-m-d H:i:s');
+					
+					$user_type = $this->Common->get_col_by_key('users','users_id',$users_id,'user_type');
+					$res = $this->user_model->update($data, $users_id);
+					
+					
+					if ($res) {
+						// Profile update successful
+						
+						$final = array();
+						$final['status'] = true;
+						$final['data'] = $this->user_model->get($user_type, $users_id);
+						$final['message'] = 'Profile updated successfully.';
+						$this->response($final, REST_Controller::HTTP_OK);
+					} else {
+						// Profile update failed
+						$this->response([
+							'status' => FALSE,
+							'message' => 'There was a problem updating the profile. Please try again',
+							'errors' => [$this->db->error()]
+						], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+					}
+				}
 			}
 		}
 }
