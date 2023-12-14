@@ -229,6 +229,8 @@ class V2 extends REST_Controller {
 		}
 	}
 	
-
+	public function callback(){
+		print_r($_POST);
+	}
 }   	   
 ?>

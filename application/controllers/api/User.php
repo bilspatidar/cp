@@ -896,7 +896,74 @@ class User extends REST_Controller {
 		
 	}
 	
+	public function update_password_post($params=''){
+		if(!empty($params)){
+			$getTokenData = $this->is_authorized($params);
+		}else{
+			$getTokenData = $this->is_authorized('merchant');
+		}
+		$usersData = json_decode(json_encode($getTokenData), true);
+		$session_id = $usersData['data']['users_id'];
 	
+		$_POST = json_decode($this->input->raw_input_stream, true);
+		
+		// Validate old and new passwords
+		$this->form_validation->set_rules('old_password', 'Old Password', 'trim|required');
+		$this->form_validation->set_rules('new_password', 'New Password', 'trim|required|min_length[8]|callback_valid_password');
+		$this->form_validation->set_rules('confirmnew_password', 'Confirm New Password', 'trim|required|matches[new_password]');
+	
+		if ($this->form_validation->run() === false) {
+			// Validation failed, send validation errors to the view
+			$array_error = array_map(function ($val) { return str_replace(array("\r", "\n"), '', strip_tags($val));}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
+			$this->response(['status' => FALSE,'errors' => $array_error,'message' => 'Error in submit form'], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+		} else {
+			// Update password
+			$new_password = $this->input->post('new_password');
+			$old_password = $this->input->post('old_password');
+			if($new_password==$old_password){
+				$this->response(['status' => FALSE,'errors' => ['Please choose different password'],'message' => 'Error in submit form'], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+			}
+			else
+			{
+				$users_id = $usersData['data']['users_id']; 
+				$exist_password =   $this->db->get_where('users',array('users_id'=>$users_id))->row()->password;
+				if(password_verify($old_password, $exist_password))
+				{
+					$data['password'] = password_hash($new_password, PASSWORD_DEFAULT);
+					$data['updatedBy'] = $session_id;
+					$data['updated'] = date('Y-m-d H:i:s');
+					$user_type = $usersData['data']['user_type']; // Assuming you are updating the password for the currently logged-in user
+			
+					$res = $this->user_model->update($data, $users_id);
+			
+					if ($res) {
+						// Password update successful
+						$final = array();
+						$final['status'] = true;
+						$final['data'] = $this->user_model->get($user_type, $users_id);
+						$final['message'] = 'Password updated successfully.';
+						$this->response($final, REST_Controller::HTTP_OK);
+					} else {
+						// Password update failed
+						$this->response([
+							'status' => FALSE,
+							'errors' => [$this->db->error()],
+							'message' => 'There was a problem updating password. Please try again',
+						], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+					}
+				  }
+				  else
+				  {
+					  $this->response([
+							'status' => FALSE,
+							'errors' => ['Old Password does not match'],
+							'message' => 'Error in submit form',
+						], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
+					 
+				   }
+				}
+			}
+		}
 }
 
 ?>
