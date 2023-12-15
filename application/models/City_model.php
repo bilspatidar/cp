@@ -33,10 +33,19 @@ class City_model extends CI_Model {
     }
 
     public function get($id='') {
+        $this->db->select("$this->table.*,(states.name) as state_name");
+        $this->db->from($this->table);
+		$this->db->join('states',"states.id=$this->table.state_id");
+        if(!empty($id)) {
+            $this->db->where($this->table.'.'.$this->primaryKey, $id);
+        }
+        return $this->db->get()->result();
+    }
+	public function parent_city($id='') {
         $this->db->select("*");
         $this->db->from($this->table);
         if(!empty($id)) {
-            $this->db->where($this->primaryKey, $id);
+            $this->db->where('state_id', $id);
         }
         return $this->db->get()->result();
     }

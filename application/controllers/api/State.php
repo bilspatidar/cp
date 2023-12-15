@@ -16,6 +16,15 @@ class State extends REST_Controller {
     }
 
     // state start
+	public function parent_state_get($id='') {
+        $getTokenData = $this->is_authorized('superadmin');
+        $final = array();
+        $final['status'] = true;
+        $final['data'] = $this->state_model->parent_state($id);
+        $final['message'] = 'Country parents state fetched successfully.';
+        $this->response($final, REST_Controller::HTTP_OK); 
+    }
+
     public function state_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
         $final = array();

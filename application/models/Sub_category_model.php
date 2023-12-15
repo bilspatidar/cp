@@ -33,10 +33,11 @@ class Sub_category_model extends CI_Model {
     }
 
     public function get($id='') {
-        $this->db->select("*");
+        $this->db->select("$this->table.*,(category.name) as category_name");
         $this->db->from($this->table);
+		$this->db->join('category',"category.id=$this->table.category_id");
         if(!empty($id)) {
-            $this->db->where($this->primaryKey, $id);
+            $this->db->where($this->table.'.'.$this->primaryKey, $id);
         }
         return $this->db->get()->result();
     }
