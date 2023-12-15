@@ -776,12 +776,12 @@ class User extends REST_Controller {
   {
     $parts = explode("/", $date);
     if (count($parts) == 3) {      
-      if (checkdate($parts[0], $parts[1], $parts[2]))
+      if (checkdate($parts[1], $parts[0], $parts[2]))
       {
         return TRUE;
       }
     }
-    $this->form_validation->set_message('date_valid', 'The {field} field must be mm/dd/yyyy format.');
+    $this->form_validation->set_message('date_valid', 'The {field} field must be dd/mm/yyyy format.');
     return false;
   }
 	/**
