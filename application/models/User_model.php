@@ -53,7 +53,7 @@ class User_model extends CI_Model {
 	
 	public function get($user_type,$id=''){
 		if($user_type=='merchant'){
-			$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->merchant_keys.api_key,$this->table.status");
+			$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.password,$this->table.company_name,$this->table.postal_code,$this->table.country_id,$this->table.state_id,$this->table.city_id,$this->table.street_address,$this->table.street_address2,$this->table.business_type_id,$this->table.business_category_id,$this->table.business_subcategory_id,$this->table.skypeID,$this->table.websiteURL,$this->table.business_registered,$this->table.user_type,$this->merchant_keys.api_key,$this->table.status");
 		}else{
 			$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.user_type,$this->table.status");
 		}
