@@ -68,6 +68,17 @@ class User_model extends CI_Model {
 		return $this->db->get()->result();
 		
 	}
+	public function profile_list_get($id=''){
+		
+		$this->db->select("$this->table.users_id,$this->table.name,$this->table.email,$this->table.mobile,$this->table.company_name,$this->table.address,$this->table.profile_pic,$this->table.user_type,$this->table.status");
+		
+		$this->db->from($this->table);
+		if(!empty($id)){
+			$this->db->where($this->table.'.'.$this->primaryKey,$id);
+		}
+		return $this->db->get()->result();
+		
+	}
 	
 	public function delete_merchant($id)
     {
