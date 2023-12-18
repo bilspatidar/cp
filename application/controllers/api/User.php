@@ -848,6 +848,7 @@ class User extends REST_Controller {
                 $final['message'] = 'Login success!';
                 $final['note'] = 'You are now logged in.';
 				$final['user_type'] = $token_data['user_type'];
+				$final['users_id'] = $token_data['users_id'];
 
                 $this->response($final, REST_Controller::HTTP_OK); 
 				
