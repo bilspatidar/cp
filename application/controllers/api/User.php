@@ -121,6 +121,7 @@ class User extends REST_Controller {
 	}
 	
 	//merchant start
+	
 	public function merchant_list_get($id=''){
 		$getTokenData = $this->is_authorized('superadmin');
 		
@@ -974,7 +975,7 @@ class User extends REST_Controller {
 				$_POST = json_decode($this->input->raw_input_stream, true);
 		
 				// set validation rules
-				$this->form_validation->set_rules('full_name', 'Full Name', 'trim|required|alpha_numeric_spaces|min_length[3]');
+				$this->form_validation->set_rules('name', 'Name', 'trim|required|alpha_numeric_spaces|min_length[3]');
 				$this->form_validation->set_rules('email', 'Email', 'trim|required');
 				$this->form_validation->set_rules('mobile', 'Mobile Number', 'trim|required|min_length[10]');
 				$this->form_validation->set_rules('address', 'Address', 'trim|required');
@@ -997,7 +998,7 @@ class User extends REST_Controller {
 					], REST_Controller::HTTP_BAD_REQUEST, '', 'error');
 				} else {
 					// set variables from the form
-					$data['name'] = $this->input->post('full_name');
+					$data['name'] = $this->input->post('name');
 					$data['company_name'] = $this->input->post('company_name');
 					$data['address'] = $this->input->post('address');
 					$data['mobile'] = $this->input->post('mobile');
@@ -1005,10 +1006,10 @@ class User extends REST_Controller {
 					$users_id = $this->input->post('users_id');
 					// Handle image upload
 					//$image_data = base64_decode(str_replace('data:image/jpeg;base64,', '', $base64_image));
-					if (!empty($_POST['image'])) {
-						$base64_image = $_POST['image'];
-						
-						$image_data = base64_decode($base64_image);
+					if (!empty($_POST['profile_pic'])) {
+						$base64_image = $_POST['profile_pic'];
+						$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
+						$image_data = base64_decode($image_data);
 						$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
 						$imageName = $preName."_".time().'.png';
 						
@@ -1035,7 +1036,6 @@ class User extends REST_Controller {
 					$data['updatedBy'] = $session_id;
 					$data['updated'] = date('Y-m-d H:i:s');
 					
-					$user_type = $this->Common->get_col_by_key('users','users_id',$users_id,'user_type');
 					$res = $this->user_model->update($data, $users_id);
 					
 					
@@ -1044,7 +1044,7 @@ class User extends REST_Controller {
 						
 						$final = array();
 						$final['status'] = true;
-						$final['data'] = $this->user_model->get($user_type, $users_id);
+						$final['data'] = $this->user_model->profile_list_get($users_id);
 						$final['message'] = 'Profile updated successfully.';
 						$this->response($final, REST_Controller::HTTP_OK);
 					} else {
@@ -1058,6 +1058,17 @@ class User extends REST_Controller {
 				}
 			}
 		}
+
+	public function profile_list_get($id=''){
+		$getTokenData = $this->is_authorized('superadmin');
+		
+		$final = array();
+		$final['status'] = true;
+		$final['data'] = $this->user_model->profile_list_get($id);
+		$final['message'] = 'Profile data fetched successfully.';
+		$this->response($final, REST_Controller::HTTP_OK); 
+
+	}
 }
 
 ?>
