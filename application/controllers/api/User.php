@@ -149,7 +149,7 @@ class User extends REST_Controller {
 		$this->form_validation->set_rules('confirm_password', 'Confirm Password', 'trim|required|min_length[8]|matches[password]');
 		$this->form_validation->set_rules('company_name','Company Name','alpha_numeric_spaces');
 		$this->form_validation->set_rules('websiteURL','Website URL','valid_url');
-		$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
+		//$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
@@ -282,7 +282,7 @@ class User extends REST_Controller {
 		}
 		$this->form_validation->set_rules('company_name','Company Name','alpha_numeric_spaces');
 		$this->form_validation->set_rules('websiteURL','Website URL','valid_url');
-		$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
+		//$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
