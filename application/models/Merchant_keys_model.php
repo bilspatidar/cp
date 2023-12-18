@@ -38,10 +38,11 @@ class Merchant_keys_model extends CI_Model {
         return $this->db->affected_rows();
     }
 	public function get($id=''){
-		$this->db->select("*");
+		$this->db->select("$this->table.*,(users.name) as merchant_name");
 		$this->db->from($this->table);
+		$this->db->join('users',"users.users_id=$this->table.merchant_id");
 		if(!empty($id)){
-			$this->db->where($this->primaryKey,$id);
+			$this->db->where($this->table.'.'.$this->primaryKey,$id);
 		}
 		return $this->db->get()->result();
 		

@@ -173,4 +173,148 @@ class V2_model extends CI_Model {
 		return $this->db->get();
 	}
 	
+	public function getPaymentGateway($id,$encrypt_key=''){
+		$this->db->select('id,encrypt_key,name,live_api,live_secret,test_api,test_secret,transaction_charge,live_url,test_url,methodName,daily_limit,amount_mt,base_url');
+		$this->db->from('payment_gateway');
+		$this->db->where('status','Active');
+		$this->db->where('id',$id);
+		if(!empty($encrypt_key)){
+			$this->db->where('encrypt_key',$encrypt_key);
+		}
+		return $this->db->get();
+	}
+	//fetch payment gateway data end
+	//temprequest data update
+	public function updateTempData($array){
+		$tempData['fee']         	= $array['fee'];
+        $tempData['merchant_fee']  	= $array['merchant_fee'];
+        $tempData['payment_id']    	= $array['payment_id'];
+        $tempData['amount']        	= $array['netAmt'];
+		if(!empty($array['ptxnID'])){
+			$tempData['ptxnID']        	= $array['ptxnID'];
+		}
+        $encKey            			= $array['encKey'];
+		$this->db->where('encKey',$encKey);
+		$result = $this->db->update($this->table,$tempData);
+		if($result){
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	//end temprequest data 
+	
+	public function sendCallback($backUrl,$mtxn_id,$status,$message){
+		
+	return  $form .='<form id="backUrlForm" action="'.$backUrl.'" method="POST" onsubmit="event.preventDefault()">
+			<input type="hidden" name="status" value="'.$status.'" >
+			<input type="hidden" name="message" value="'.$message.'" >
+			<input type="hidden" name="Transaction_id" value="'.$mtxn_id.'" >
+			</form>
+			<script>
+			document.getElementById("backUrlForm").submit();
+			</script>
+			';
+	}
+	
+	public function getTempDataByPtxnid($ptxnID){
+		$this->db->select('*');
+		$this->db->from('tempRequest');
+		$this->db->where('ptxnID',$ptxnID);
+		return $this->db->get();
+	}
+	//end
+	//get webhook url 
+	public function getWebhookUrl($merchant_id,$mid=''){
+		$this->db->select('id,webhook_url');
+		$this->db->from('merchant_keys');
+		$this->db->where('merchant_id',$merchant_id);
+		if(!empty($mid)){
+			$this->db->where('title',$mid);
+		}
+		return $this->db->get();
+	}
+	//end
+	public function setResponseString($responseData){
+		$Response = [
+						'transaction_id'=>$responseData['transactionId'],
+						'status'		=>$responseData['status'],
+						'amount'		=>$responseData['amount'],
+						'currency'		=>$responseData['currency'],
+						'email'			=>$responseData['email'],
+						'mode'			=>$responseData['mode'],
+						'phone'			=>$responseData['phone'],
+						'firstname'		=>$responseData['firstname'],
+						'lastname'		=>$responseData['lastname'],
+						'message'		=>$responseData['message']
+						
+					];
+		return $Response;
+	}
+	public function saveOrderData($array){
+		$tempId = $array['tempId'];
+		$temp_payment_id = $this->Common->get_col_by_key('tempRequest','id',$tempId,'payment_id');
+		$payment_name = $this->Common->get_col_by_key('payment_gateway','id',$temp_payment_id,'name');
+		$orderData['fee']               = $this->Common->get_col_by_key('tempRequest','id',$tempId,'fee');
+        $orderData['merchant_fee']      = $array['merchant_fee'];
+        $orderData['payment_id']        = $temp_payment_id;
+        $orderData['amount']            = $array['netAmt'];
+        $orderData['transactionId']     = $array['transactionId'];
+        $orderData['currency']          = $array['currency'];
+        $orderData['email']             = $array['email'];
+        $orderData['mode']              = $array['mode'];
+        $orderData['payment_mode']      = $payment_name;
+        $orderData['order_key']         = $array['order_key'];
+        $orderData['status']            = $array['status'];
+		if(isset($array['transaction_date'])){
+			$orderData['transaction_date']  = $array['transaction_date'];
+			$orderData['from_temp']  = 1;
+			$orderData['tempUpdated']  = date('Y-m-d H:i:s');
+		}else{
+			$orderData['transaction_date']  = $this->Common->get_col_by_key('tempRequest','id',$tempId,'initiated'); //date('Y-m-d H:i:s');
+		}
+        $orderData['merchant_id']       = $array['merchant_id'];
+        $orderData['callbackurl']       = $this->Common->get_col_by_key('tempRequest','id',$tempId,'callbackurl');
+        $orderData['message']           = $array['message'];
+        $orderData['mtxnID']            = $array['mtxnID'];
+        $orderData['requested_phone']   = $array['phone'];
+        $orderData['requested_firstname'] = $array['firstname'];
+        $orderData['requested_lastname']    = $array['lastname'];
+        $orderData['cardType']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardType');
+        $orderData['cardNo']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardNo');
+        $orderData['cardholdername']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardholdername');
+        $orderData['expirymonth']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'expirymonth');
+        $orderData['expiryyear']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'expiryyear');
+        $orderData['cardCVC']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardCVC');
+        $orderData['requestMode']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'requestMode');
+        $orderData['mid']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'mid');
+		$orderData['address'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'address');
+		$orderData['city'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'city');
+		$orderData['state'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'state');
+		$orderData['country'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'country');
+		
+		$orderData['encrypt_key'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'encrypt_key');
+		$orderData['web_url'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'web_url');
+		
+		$ifAny = $this->db->get_where('orders',array('mtxnID'=>$array['mtxnID']));
+		if($ifAny->num_rows()>0){
+			#return 0;
+			$this->db->where('id',$ifAny->row()->id);
+			$result = $this->db->update('orders',$orderData);
+		    //$tempId = $array['tempId'];
+			$tempdata['dels'] = 1;
+			$this->db->where('id',$tempId);
+			$this->db->update('tempRequest',$tempdata);
+			return 1;
+		}
+		else {
+        $result = $this->db->insert('orders',$orderData);
+		    //$tempId = $array['tempId'];
+			$tempdata['dels'] = 1;
+			$this->db->where('id',$tempId);
+			$this->db->update('tempRequest',$tempdata);
+			return 1;
+		}
+	}
+	
 }

@@ -1,9 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Sub_category_model extends CI_Model {
+class Api_documentation_model extends CI_Model {
 
-    protected $table      = 'sub_category';
+    protected $table      = 'api_documentation';
     protected $primaryKey = 'id';
 
     /**
@@ -33,11 +33,10 @@ class Sub_category_model extends CI_Model {
     }
 
     public function get($id='') {
-        $this->db->select("$this->table.*,(category.name) as category_name");
+        $this->db->select("*");
         $this->db->from($this->table);
-		$this->db->join('category',"category.id=$this->table.category_id");
         if(!empty($id)) {
-            $this->db->where($this->table.'.'.$this->primaryKey, $id);
+            $this->db->where($this->primaryKey, $id);
         }
         return $this->db->get()->result();
     }

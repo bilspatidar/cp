@@ -16,7 +16,15 @@ class City extends REST_Controller {
     }
 
     // City start
-    public function city_get($id='') {
+    public function parent_city_get($id='') {
+        $getTokenData = $this->is_authorized('superadmin');
+        $final = array();
+        $final['status'] = true;
+        $final['data'] = $this->city_model->parent_city($id);
+        $final['message'] = 'State parents city fetched successfully.';
+        $this->response($final, REST_Controller::HTTP_OK); 
+    }
+	public function city_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
         $final = array();
         $final['status'] = true;

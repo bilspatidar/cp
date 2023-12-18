@@ -33,10 +33,19 @@ class State_model extends CI_Model {
     }
 
     public function get($id='') {
+        $this->db->select("$this->table.*,(countries.name) as country_name");
+        $this->db->from($this->table);
+		$this->db->join('countries',"countries.id=$this->table.country_id");
+        if(!empty($id)) {
+            $this->db->where($this->table.'.'.$this->primaryKey, $id);
+        }
+        return $this->db->get()->result();
+    }
+	public function parent_state($id='') {
         $this->db->select("*");
         $this->db->from($this->table);
         if(!empty($id)) {
-            $this->db->where($this->primaryKey, $id);
+            $this->db->where('country_id', $id);
         }
         return $this->db->get()->result();
     }
