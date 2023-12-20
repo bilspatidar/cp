@@ -41,4 +41,13 @@ class Document_subcategory_model extends CI_Model {
         }
         return $this->db->get()->result();
     }
+	public function document_subcategory_parent($id='') {
+		$this->db->select("$this->table.*,(document_category.name) as category_name");
+        $this->db->from($this->table);
+		$this->db->join('document_category',"document_category.id=$this->table.document_category_id");
+        if(!empty($id)) {
+            $this->db->where($this->table.'.'.'document_category_id', $id);
+        }
+        return $this->db->get()->result();
+    }
 }

@@ -16,12 +16,20 @@ class Document_subcategory extends REST_Controller {
     }
 
     //document_subcategory start
+	public function document_subcategory_parent_get($id='') {
+        $getTokenData = $this->is_authorized('superadmin');
+        $final = array();
+        $final['status'] = true;
+        $final['data'] = $this->document_subcategory_model->document_subcategory_parent($id);
+        $final['message'] = 'Document Category parents document subcategory fetched successfully.';
+        $this->response($final, REST_Controller::HTTP_OK); 
+    }
     public function document_subcategory_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
         $final = array();
         $final['status'] = true;
         $final['data'] = $this->document_subcategory_model->get($id);
-        $final['message'] = 'Document_subcategory fetched successfully.';
+        $final['message'] = 'Document subcategory fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
 
@@ -34,8 +42,8 @@ class Document_subcategory extends REST_Controller {
             $_POST = json_decode($this->input->raw_input_stream, true);
 
             // set validation rules
-            $this->form_validation->set_rules('name', 'document_subcategory Name', 'trim|required|alpha_numeric_spaces');
-            $this->form_validation->set_rules('document_category_id', 'document_category_id', 'trim|required|numeric');
+            $this->form_validation->set_rules('name', 'Document subcategory Name', 'trim|required|alpha_numeric_spaces');
+            $this->form_validation->set_rules('document_category_id', 'Document category_id', 'trim|required|numeric');
             
             if ($this->form_validation->run() === false) {
                 $array_error = array_map(function ($val) {
@@ -67,7 +75,7 @@ class Document_subcategory extends REST_Controller {
                     $final = array();
                     $final['status'] = true;
                     $final['data'] = $this->document_subcategory_model->get($res);
-                    $final['message'] = 'Document_subcategory created successfully.';
+                    $final['message'] = 'Document subcategory created successfully.';
                     $this->response($final, REST_Controller::HTTP_OK); 
                 } else {
                     // document_subcategory creation failed, this should never happen
@@ -86,8 +94,8 @@ class Document_subcategory extends REST_Controller {
             $_POST = json_decode($this->input->raw_input_stream, true);
         
             // set validation rules
-            $this->form_validation->set_rules('name', 'Document_subcategory Name', 'trim|required|alpha_numeric_spaces');
-            $this->form_validation->set_rules('document_category_id', 'document_category_id', 'trim|required|numeric');
+            $this->form_validation->set_rules('name', 'Document subcategory Name', 'trim|required|alpha_numeric_spaces');
+            $this->form_validation->set_rules('document_category_id', 'Document category_id', 'trim|required|numeric');
             $this->form_validation->set_rules('status', 'Status', 'trim');
         
             if ($this->form_validation->run() === false) {
@@ -125,7 +133,7 @@ class Document_subcategory extends REST_Controller {
                     $final = array();
                     $final['status'] = true;
                     $final['data'] = $this->document_subcategory_model->get($id);
-                    $final['message'] = 'Document_subcategory updated successfully.';
+                    $final['message'] = 'Document subcategory updated successfully.';
                     $this->response($final, REST_Controller::HTTP_OK);
                 } else {
                     // document_subcategory update failed, this should never happen
@@ -145,7 +153,7 @@ class Document_subcategory extends REST_Controller {
         $response = $this->document_subcategory_model->delete($id);
 
         if ($response) {
-            $this->response(['status' => true, 'message' => 'Document_subcategory deleted successfully.'], REST_Controller::HTTP_OK);
+            $this->response(['status' => true, 'message' => 'Document subcategory deleted successfully.'], REST_Controller::HTTP_OK);
         } else {
             $this->response(['status' => false, 'message' => 'Not deleted'], REST_Controller::HTTP_BAD_REQUEST);
         }
