@@ -902,7 +902,7 @@ class User extends REST_Controller {
 		if(!empty($params)){
 			$getTokenData = $this->is_authorized($params);
 		}else{
-			$getTokenData = $this->is_authorized('merchant');
+			$getTokenData = $this->is_authorized();
 		}
 		$usersData = json_decode(json_encode($getTokenData), true);
 		$session_id = $usersData['data']['users_id'];
@@ -969,7 +969,7 @@ class User extends REST_Controller {
 
 		public function profile_update_post($params=""){
 			{
-				$getTokenData = $this->is_authorized('superadmin');
+				$getTokenData = $this->is_authorized();
 				$usersData = json_decode(json_encode($getTokenData), true);
 				$session_id = $usersData['data']['users_id'];
 		
@@ -1061,7 +1061,7 @@ class User extends REST_Controller {
 		}
 
 	public function profile_list_get($id=''){
-		$getTokenData = $this->is_authorized('superadmin');
+		$getTokenData = $this->is_authorized();
 		
 		$final = array();
 		$final['status'] = true;

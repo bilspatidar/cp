@@ -41,4 +41,13 @@ class Sub_category_model extends CI_Model {
         }
         return $this->db->get()->result();
     }
+	public function parent_sub_category($id='') {
+		$this->db->select("$this->table.*,(category.name) as category_name");
+        $this->db->from($this->table);
+		$this->db->join('category',"category.id=$this->table.category_id");
+        if(!empty($id)) {
+            $this->db->where($this->table.'.'.'category_id', $id);
+        }
+        return $this->db->get()->result();
+    }
 }
