@@ -934,7 +934,8 @@ abstract class REST_Controller extends CI_Controller {
 				  return $decodedToken;
 				}
 				else{
-				   return $this->response(['status' => FALSE, 'message' => 'You are not authorize to perform this action'], REST_Controller::HTTP_UNAUTHORIZED);
+				     return $decodedToken;
+				   //return $this->response(['status' => FALSE, 'message' => 'You are not authorize to perform this action'], REST_Controller::HTTP_UNAUTHORIZED);
 				}
             } 
             else {
