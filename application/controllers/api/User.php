@@ -1061,7 +1061,7 @@ class User extends REST_Controller {
 		}
 
 	public function profile_list_get($id=''){
-		$getTokenData = $this->is_authorized('superadmin');
+		$getTokenData = $this->is_authorized();
 		
 		$final = array();
 		$final['status'] = true;
