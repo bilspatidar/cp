@@ -11,6 +11,14 @@ class Sub_category extends REST_Controller {
     }
 
     // Sub_category start
+	public function parent_sub_category_get($id='') {
+        $getTokenData = $this->is_authorized('superadmin');
+        $final = array();
+        $final['status'] = true;
+        $final['data'] = $this->sub_category_model->parent_sub_category($id);
+        $final['message'] = 'Category parents Sub category fetched successfully.';
+        $this->response($final, REST_Controller::HTTP_OK); 
+    }
     public function sub_category_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
         $final = array();

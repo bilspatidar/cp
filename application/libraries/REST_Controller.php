@@ -930,11 +930,15 @@ abstract class REST_Controller extends CI_Controller {
             {
 				$usersData    = json_decode(json_encode($decodedToken), true);
 			    $user_type   =  $usersData['data']['user_type'];
-				if(!empty($params) && $params==$user_type){
-				  return $decodedToken;
+				if(!empty($params)){
+					if($params==$user_type){
+						return $decodedToken;
+					}else{
+						return $this->response(['status' => FALSE, 'message' => 'You are not authorize to perform this action'], REST_Controller::HTTP_UNAUTHORIZED);
+					}
 				}
 				else{
-				   return $this->response(['status' => FALSE, 'message' => 'You are not authorize to perform this action'], REST_Controller::HTTP_UNAUTHORIZED);
+					return $decodedToken;
 				}
             } 
             else {
