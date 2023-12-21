@@ -1068,7 +1068,6 @@ class User extends REST_Controller {
 		$final['data'] = $this->user_model->profile_list_get($id);
 		$final['message'] = 'Profile data fetched successfully.';
 		$this->response($final, REST_Controller::HTTP_OK); 
-
 	}
 }
 
