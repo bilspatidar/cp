@@ -17,11 +17,12 @@ class Paymentgateway extends REST_Controller {
 	}
 	
 	//payment gateways start
-	public function payment_gateway_get($id=''){   ///list data
+	public function payment_gateway_list_post($id=''){   ///list data
 		$getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$final = array();
 		$final['status'] = true;
-		$final['data'] = $this->Payment_gateway_model->get($id);
+		$final['data'] = $this->Payment_gateway_model->get($id,$filterData);
 		$final['message'] = 'Payment gateway fetched successfully.';
 		$this->response($final, REST_Controller::HTTP_OK); 
 	}	
@@ -176,7 +177,7 @@ class Paymentgateway extends REST_Controller {
 		$this->form_validation->set_rules('maxLimit', 'Maximum Limit', 'numeric');
 		$this->form_validation->set_rules('range', 'Range', 'numeric');
 		$this->form_validation->set_rules('methodName', 'Method Name','trim');
-		$this->form_validation->set_rules('currency[]','Currency', 'required');
+		//$this->form_validation->set_rules('currency[]','Currency', 'required');
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view

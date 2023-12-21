@@ -18,11 +18,12 @@ class Currency extends REST_Controller {
 
 	
 		//currency start
-	public function currency_get($id=''){   ///list data
+	public function currency_list_post($id=''){   ///list data
 		$getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$final = array();
                 $final['status'] = true;
-				$final['data'] = 	$this->currency_model->get($id);
+				$final['data'] = 	$this->currency_model->get($id,$filterData);
                 $final['message'] = 'Currency fetched successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 	}	
