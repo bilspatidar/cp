@@ -11,11 +11,12 @@ class Business_type extends REST_Controller {
     }
 
     // Business_type start
-    public function business_type_get($id='') {
+    public function business_type_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+        $filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->business_type_model->get($id);
+        $final['data'] = $this->business_type_model->get($id,$filterData);
         $final['message'] = 'Business_type fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK);
     }
