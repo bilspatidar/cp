@@ -27,6 +27,7 @@ class City extends REST_Controller {
 	public function city_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
 		$filterData = json_decode($this->input->raw_input_stream, true);
+		
         $final = array();
         $final['status'] = true;
         $final['data'] = $this->city_model->get($id,$filterData);

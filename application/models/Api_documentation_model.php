@@ -38,6 +38,7 @@ class Api_documentation_model extends CI_Model {
         if(!empty($id)) {
             $this->db->where($this->primaryKey, $id);
         }
+		
 		if(isset($filterData['title']) && !empty($filterData['title'])){
 			$this->db->like('title',$filterData['title']);
 			$this->db->or_like('menu_name',$filterData['title']);

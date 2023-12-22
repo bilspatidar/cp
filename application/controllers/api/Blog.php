@@ -16,11 +16,12 @@ class Blog extends REST_Controller {
     }
 
     // blog start
-    public function blog_get($id='') {
+    public function blog_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->blog_model->get($id);
+        $final['data'] = $this->blog_model->get($id,$filterData);
         $final['message'] = 'Blogs fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

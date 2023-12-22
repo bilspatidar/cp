@@ -39,6 +39,7 @@ class State_model extends CI_Model {
         if(!empty($id)) {
             $this->db->where($this->table.'.'.$this->primaryKey, $id);
         }
+		
 		if(isset($filterData['name']) && !empty($filterData['name'])){
 			$this->db->like($this->table.'.'.'name',$filterData['name']);
 		}

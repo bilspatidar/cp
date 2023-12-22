@@ -38,6 +38,7 @@ class Country_model extends CI_Model {
         if(!empty($id)) {
             $this->db->where($this->primaryKey, $id);
         }
+		
 		if(isset($filterData['name']) && !empty($filterData['name'])){
 			$this->db->like('name',$filterData['name']);
 			$this->db->or_like('shortname',$filterData['name']);

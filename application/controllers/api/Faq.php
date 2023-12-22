@@ -16,11 +16,12 @@ class Faq extends REST_Controller {
 		$this->load->helper("security");
     }
 
-    public function faq_get($id='') {
+    public function faq_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->faq_model->get($id);
+        $final['data'] = $this->faq_model->get($id,$filterData);
         $final['message'] = 'FAQ fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

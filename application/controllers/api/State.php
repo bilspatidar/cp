@@ -28,6 +28,7 @@ class State extends REST_Controller {
     public function state_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
 		$filterData = json_decode($this->input->raw_input_stream, true);
+		
         $final = array();
         $final['status'] = true;
         $final['data'] = $this->state_model->get($id,$filterData);
