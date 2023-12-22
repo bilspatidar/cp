@@ -25,11 +25,12 @@ class State extends REST_Controller {
         $this->response($final, REST_Controller::HTTP_OK); 
     }
 
-    public function state_get($id='') {
+    public function state_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->state_model->get($id);
+        $final['data'] = $this->state_model->get($id,$filterData);
         $final['message'] = 'States fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
