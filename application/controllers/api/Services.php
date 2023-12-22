@@ -16,11 +16,12 @@ class Services extends REST_Controller {
     }
 
     // services start
-    public function services_get($id='') {
+    public function services_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->services_model->get($id);
+        $final['data'] = $this->services_model->get($id,$filterData);
         $final['message'] = 'Services fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

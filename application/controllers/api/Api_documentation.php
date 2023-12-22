@@ -16,11 +16,13 @@ class Api_documentation extends REST_Controller {
     }
 
     // Api documentation start
-    public function api_documentation_get($id='') {
+    public function api_documentation_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
+		
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->api_documentation_model->get($id);
+        $final['data'] = $this->api_documentation_model->get($id,$filterData);
         $final['message'] = 'Api documentation fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

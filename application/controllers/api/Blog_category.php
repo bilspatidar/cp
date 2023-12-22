@@ -16,11 +16,13 @@ class Blog_category extends REST_Controller {
     }
 
     // blog_category start
-    public function blog_category_get($id='') {
+    public function blog_category_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
+		
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->blog_category_model->get($id);
+        $final['data'] = $this->blog_category_model->get($id,$filterData);
         $final['message'] = 'Blog category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

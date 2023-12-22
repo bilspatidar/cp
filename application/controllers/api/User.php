@@ -122,13 +122,13 @@ class User extends REST_Controller {
 	
 	//merchant start
 	
-	public function merchant_list_get($id=''){
+	public function merchant_list_post($id=''){
 		$getTokenData = $this->is_authorized('superadmin');
-		
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$user_type = 'merchant';
 		$final = array();
 		$final['status'] = true;
-		$final['data'] = $this->user_model->get($user_type,$id);
+		$final['data'] = $this->user_model->get($user_type,$id,$filterData);
 		$final['message'] = 'Merchant fetched successfully.';
 		$this->response($final, REST_Controller::HTTP_OK); 
 
@@ -245,7 +245,7 @@ class User extends REST_Controller {
 				
 				// user creation ok
 				$data2['merchant_id'] = $res;
-				$data2['title'] = 'Api-keys';
+				$data2['title'] = $this->merchant_keys_model->generateMid();
 				$data2['api_key'] = $this->Common->GenerateLiveAPI();
 				$data2['added'] = date('Y-m-d H:i:s');
 				$data2['added_by'] = $session_id;
@@ -411,11 +411,12 @@ class User extends REST_Controller {
 		}
     }
 	
-	public function merchant_keys_get($id=''){
+	public function merchant_keys_list_post($id=''){
 		$getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$final = array();
 		$final['status'] = true;
-		$final['data'] = $this->merchant_keys_model->get($id);
+		$final['data'] = $this->merchant_keys_model->get($id,$filterData);
 		$final['message'] = 'Merchant Keys fetched successfully.';
 		$this->response($final, REST_Controller::HTTP_OK);
 	}
@@ -459,6 +460,7 @@ class User extends REST_Controller {
 			if(!empty($merchant_id)){
 				$data['merchant_id'] = $merchant_id;
 			}
+			$data['status'] = 'Active';
 			$data['api_key'] = $this->Common->GenerateLiveAPI();
 			$data['added'] = date('Y-m-d H:i:s');
 			$data['added_by'] = $session_id;
@@ -520,6 +522,10 @@ class User extends REST_Controller {
 			if(!empty($webhook_url)){
 				$data['webhook_url'] = $webhook_url;
 			}
+			$status = $this->input->post('status');
+			if(!empty($status)){
+				$data['status'] = $status;
+			}
 			
 			$data['updated_by'] = $session_id;
 			$data['updated'] = date('Y-m-d H:i:s');
@@ -557,11 +563,12 @@ class User extends REST_Controller {
 		}
     }
 	
-	public function merchant_payment_link_get($id=''){
+	public function merchant_payment_link_list_post($id=''){
 		$getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$final = array();
 		$final['status'] = true;
-		$final['data'] = $this->merchant_payment_link->get($id);
+		$final['data'] = $this->merchant_payment_link->get($id,$filterData);
 		$final['message'] = 'Merchant payment link fetched successfully.';
 		$this->response($final, REST_Controller::HTTP_OK);
 	}

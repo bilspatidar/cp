@@ -16,11 +16,13 @@ class Country extends REST_Controller {
     }
 
     // country start
-    public function country_get($id='') {
+    public function country_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
+		
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->country_model->get($id);
+        $final['data'] = $this->country_model->get($id,$filterData);
         $final['message'] = 'Country fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }

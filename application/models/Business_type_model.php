@@ -32,7 +32,7 @@ class Business_type_model extends CI_Model {
         return $this->db->affected_rows();
     }
 
-    public function get($id='',$filterData='') {
+    public function get($id='',$filterData) {
         $this->db->select("*");
         $this->db->from($this->table);
         if(!empty($id)) {
