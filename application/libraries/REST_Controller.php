@@ -938,7 +938,9 @@ abstract class REST_Controller extends CI_Controller {
 					}
 				}
 				else{
-					return $decodedToken;
+
+				     return $decodedToken;
+
 				}
             } 
             else {
