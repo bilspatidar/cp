@@ -32,21 +32,18 @@ class Business_type_model extends CI_Model {
         return $this->db->affected_rows();
     }
 
-    public function get($id='',$filterData) {
+    public function get($id='',$filterData='') {
         $this->db->select("*");
-        
-          if(isset($filterData['name']) && !empty($filterData['name'])){
-              $this->db->like('name',$filterData['name']);
-          }
-          
-          if(isset($filterData['status'])){
-              $this->db->where('status',$filterData['status']);
-          }
-        
         $this->db->from($this->table);
         if(!empty($id)) {
             $this->db->where($this->primaryKey, $id);
         }
+		if(isset($filterData['name']) && !empty($filterData['name'])){
+			$this->db->like('name',$filterData['name']);
+		}
+		if(isset($filterData['status'])){
+			$this->db->where('status',$filterData['status']);
+		}
         return $this->db->get()->result();
     }
 }
