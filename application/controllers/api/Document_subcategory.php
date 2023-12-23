@@ -24,11 +24,12 @@ class Document_subcategory extends REST_Controller {
         $final['message'] = 'Document Category parents document subcategory fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
-    public function document_subcategory_get($id='') {
+    public function document_subcategory_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->document_subcategory_model->get($id);
+        $final['data'] = $this->document_subcategory_model->get($id,$filterData);
         $final['message'] = 'Document subcategory fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
