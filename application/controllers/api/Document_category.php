@@ -16,11 +16,12 @@ class Document_category extends REST_Controller {
     }
 
     //document_category start
-    public function document_category_get($id='') {
+    public function document_category_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->document_category_model->get($id);
+        $final['data'] = $this->document_category_model->get($id,$filterData);
         $final['message'] = 'Document_category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
