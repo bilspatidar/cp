@@ -24,7 +24,7 @@ class V2 extends REST_Controller {
 		$_POST = json_decode($this->input->raw_input_stream, true);
 			
 		// set validation rules
-		$this->form_validation->set_rules('transaction_id','Transaction Id','trim|required|alpha_dash|is_unique[tempRequest.transactionId]|xss_clean');
+		$this->form_validation->set_rules('transaction_id','Transaction Id','trim|required|alpha_dash|is_unique[transaction.merchant_transaction_id]|xss_clean');
 		$this->form_validation->set_rules('firstname','First Name','trim|required|alpha|min_length[3]|xss_clean');
 		$this->form_validation->set_rules('lastname','Last Name','trim|required|alpha|xss_clean');
 		$this->form_validation->set_rules('phone','Phone no.','trim|required|numeric|xss_clean');
@@ -75,7 +75,6 @@ class V2 extends REST_Controller {
 					$cardType 		= $this->v2_model->check_cc($cardnumber);
 					$cardnumber 	= $this->encrypt->encode($cardnumber);
 					$cvv 			= $this->encrypt->encode($cvv);
-					$requestModeValue 	= '';
 				}else{
 					$cardholdername	= '';
 					$cardnumber		= '';
@@ -83,7 +82,6 @@ class V2 extends REST_Controller {
 					$expiryyear		= '';
 					$cvv			= '';
 					$cardType		= '';
-					$requestModeValue 	= $this->security->xss_clean($this->input->post('upi_id'));	
 				}
 			}else{
 				$cardholdername	= '';
@@ -91,8 +89,7 @@ class V2 extends REST_Controller {
 				$expirymonth	= '';
 				$expiryyear		= '';
 				$cvv			= '';
-				$cardType		= '';
-				$requestModeValue 	= '';	
+				$cardType		= '';	
 			}
 			if($this->input->get_request_header('mid')){
 				$mid = $this->input->get_request_header('mid', TRUE);
@@ -115,8 +112,9 @@ class V2 extends REST_Controller {
 							$this->response([ 'status' => FALSE, 'message' =>'Daily limit over.','errors' =>['Daily limit over.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
 						}elseif($payment>0){
 							if($payment->num_rows()>0){
-								$getOrderData = $this->v2_model->getOrderData($transaction_id);
-								if($getOrderData->num_rows()<1){
+									$_POST['cardnumber'] = $cardnumber;
+									$_POST['cvv'] = $cvv;
+									$request = json_encode($_POST,JSON_UNESCAPED_SLASHES);
 									
 									$savedata['merchant_id'] 	= $merchant_id;
 									$savedata['firstname'] 		= $firstname;
@@ -125,42 +123,36 @@ class V2 extends REST_Controller {
 									$savedata['phone'] 			= $phone;
 									$savedata['amount'] 		= $amount;
 									$savedata['currency'] 		= $currency;
-									$savedata['transactionId'] 	= $transaction_id;
+									$savedata['merchant_transaction_id'] 	= $transaction_id;
 									$savedata['address'] 	    = $address;
 									$savedata['city'] 	        = $city;
 									$savedata['state'] 	        = $state;
 									$savedata['country']        = $country;
 									$savedata['callbackurl'] 	= $callbackurl;
-									$savedata['encKey'] 		= $this->v2_model->random_key_string();
-									$savedata['initiated'] 		= date('Y-m-d H:i:s');
-									$savedata['status'] 		= 'In Progress';
-									$savedata['cardNo'] 	    = $cardnumber;
+									$savedata['token'] 			= $this->v2_model->random_key_string();
+									$savedata['initiated_datetime'] = date('Y-m-d H:i:s');
+									$savedata['status'] 		= 'Pending';
+									$savedata['cardnumber'] 	= $cardnumber;
 									$savedata['expirymonth']    = $expirymonth;
 									$savedata['expiryyear']     = $expiryyear;
 									$savedata['cardholdername'] = $cardholdername;
-									$savedata['cardCVC'] 	    = $cvv;
+									$savedata['cardcvv'] 	    = $cvv;
 									$savedata['cardType'] 	    = $cardType;
 									$savedata['requestMode'] 	= $requestMode;
-									$savedata['requestModeValue']= $requestModeValue;
 									$savedata['mid']            = $mid;
-									$savedata['ptxnID'] 		= $this->v2_model->random_key_string();
-									$savedata['web_url']        = $this->v2_model->get_client_ip();//$_SERVER['HTTP_HOST'];
-
+									$savedata['request']            = $request;
 									if ($res = $this->v2_model->create($savedata)) {
 						
 											$final = array();
 											$final['status'] = true;
-											$final['token'] = $savedata['encKey'];
-											$final['message'] = 'Token generated.';
+											$final['token'] = $savedata['token'];
+											$final['message'] = 'Token generated successfully.';
 											$this->response($final, REST_Controller::HTTP_OK); 
 
 									}else{
 											$this->response([ 'status' => FALSE, 'message' =>'Your data not matches.','errors' =>['Your data not matches.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
 									}
-								}
-								else{
-									$this->response([ 'status' => FALSE, 'message' =>'Duplicate transaction id.','errors' =>['Duplicate transaction id.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
-								}
+								
 							}
 							else{
 								$this->response([ 'status' => FALSE, 'message' =>'Resource not found.','errors' =>['Resource not found.']], REST_Controller::HTTP_NOT_FOUND,'','error');
@@ -183,54 +175,128 @@ class V2 extends REST_Controller {
 		}
 	}
 	//generate_token end
-
-	public function validate_token_post(){
-		$_POST = json_decode($this->input->raw_input_stream, true);
-		$this->form_validation->set_rules('Token','Token','trim|required|alpha_dash|xss_clean');
-		if ($this->form_validation->run() === false) {
-			$array_error = array_map(function ($val) { return str_replace(array("\r", "\n"), '', strip_tags($val));}, array_filter(explode(".", trim(strip_tags(validation_errors())))));
-            $this->response(['status' => FALSE,'message' =>'Bad request','errors' =>$array_error ], REST_Controller::HTTP_BAD_REQUEST,'','error');
-			
-		}else{
-			$token = $this->security->xss_clean($this->input->post('Token'));
-			$tempRequest = $this->v2_model->validateTempRequest($token);
-			if($tempRequest->num_rows()>0){
-				$merchant_id = $tempRequest->row()->merchant_id;
-				$amount = $tempRequest->row()->amount;
-				$currency = $tempRequest->row()->currency;
-				$cardType = $tempRequest->row()->cardType;
-				$country = $tempRequest->row()->country;
-				$mid = $tempRequest->row()->mid;
-				$check_auth_client = $this->v2_model->check_auth_client();
-				if($check_auth_client>0){
-					$payment = $this->v2_model->merchantPaymentGateway($merchant_id,$amount,$currency,$cardType,$country,$mid);
+	public function validate_token_get($token=''){
+		
+		$validateToken = $this->v2_model->validateToken($token);
+		if($validateToken->num_rows()>0){
+				$updateData = [
+					'redirect_datetime'	=>	date('Y-m-d H:i:s')
+				];
+				$this->v2_model->update($updateData,$token);
+				$transaction_id= $validateToken->row()->id;
+				$merchant_id= $validateToken->row()->merchant_id;
+				$amount 	= $validateToken->row()->amount;
+				$currency 	= $validateToken->row()->currency;
+				$cardType 	= $validateToken->row()->cardType;
+				$country 	= $validateToken->row()->country;
+				$mid 		= $validateToken->row()->mid;
+				$request 	= $validateToken->row()->request;
+				
+				$payment = $this->v2_model->merchantPaymentGateway($merchant_id,$amount,$currency,$cardType,$country,$mid);
 					if($payment=='1'){
 						$this->response([ 'status' => FALSE, 'message' =>'Daily limit over.','errors' =>['Daily limit over.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
 					}elseif($payment>0){
 						if($payment->num_rows()>0){
-						$id 		= $payment->row()->id;
-						$pencrypt_key = $payment->row()->encrypt_key;
-						$methodName = $payment->row()->methodName;
-						redirect('http://localhost/cp/'.$methodName.'/index/'.$id.'/'.$pencrypt_key.'/'.$token);
-						//redirect(base_url().$methodName.'/index/'.$id.'/'.$pencrypt_key.'/'.$token);
+							$id 		= $payment->row()->id;
+							$pencrypt_key = $payment->row()->encrypt_key;
+							$methodName = $payment->row()->methodName;
+							$this->v2_model->update(array('payment_id'=>$id),$token);
+							$paymentData = [
+								'transaction_id'	=>	$transaction_id,
+								'payment_id'		=>	$id,
+								'request'			=>	$request,
+								'added'				=>	date('Y-m-d H:i:s')
+							];
+							$this->v2_model->createPaymentGateway($paymentData);
+							$this->load->library($methodName);
+							$result = $this->$methodName->payment($id,$pencrypt_key,$token);
+							
+							if($pencrypt_key=='IudkjaA0hMdD1OmJpCtral9jY'){ //centpays
+								
+								$responseData = json_decode($result, TRUE);
+								if(isset($responseData['status']) && $responseData['status'] == 'Success') {
+									$redirectUrl =  "https://centpays.com/v2/ini_payment/".$responseData['token'];
+									echo $redirectUrl;exit();
+									redirect($redirectUrl);
+								}else{
+									$response =$this->v2_model->sendCallback($responseData,$token,'Failed',$responseData['message']);
+									if(!empty($response)){
+										$this->v2_model->sendWebhook($token);
+										redirect($response);
+									}
+								}
+							}
 						}else{
 							$this->response([ 'status' => FALSE, 'message' =>'Resource not found.','errors' =>['Resource not found.']], REST_Controller::HTTP_NOT_FOUND,'','error');
 						}
 					}else{
 						$this->response([ 'status' => FALSE, 'message' =>'Resource not found.','errors' =>['Resource not found.']], REST_Controller::HTTP_NOT_FOUND,'','error');
 					}
-				}
-				else{
-						$this->response([ 'status' => FALSE, 'message' =>'Unauthorized.'.$_SERVER['HTTP_HOST'],'errors' =>['Unauthorized.'.$_SERVER['HTTP_HOST'].'.']], REST_Controller::HTTP_UNAUTHORIZED,'','error');
-					}
+		}else{
+			$this->response([ 'status' => FALSE, 'message' =>'Invalid Token.','errors' =>['Invalid Token.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
+		}
+		
+	}
+	
+	public function merchant_callback_post($params =''){
+		if($params=='IudkjaA0hMdD1OmJpCtral9jY'){ //centpays
+			//print_r($_POST);
+			$transaction_status = $_POST['status'];
+			$message = $_POST['message'];
+		
+			if($transaction_status == 'Success'){
+				$status = 'Success';
+			}elseif($transaction_status == 'Failed'){
+				$status = 'Failed';
 			}else{
-				$this->response([ 'status' => FALSE, 'message' =>'Invalid Token.','errors' =>['Invalid Token.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');
+				$status = 'Pending';
+			}
+			$response =$this->v2_model->sendCallback($_POST,$_POST['Transaction_id'],$status,$message);
+			if(!empty($response)){
+				redirect($response);
 			}
 		}
 	}
-	
-	public function callback(){
-		print_r($_POST);
+	public function webhook_post($params =''){
+		if($params=='IudkjaA0hMdD1OmJpCtral9jY'){ //centpays
+			
+			$jsonString = file_get_contents("php://input");
+			$object = json_decode($jsonString);
+			$array = json_decode(json_encode($object), true);
+			$webhook['payment_key'] = $params;
+			$webhook['webhook'] = $jsonString;
+			$webhook['added'] = date('Y-m-d H:i:s');
+			$this->db->insert('paymentWebhook',$webhook);
+			
+			$amount 	= $array['amount'];
+			$transactionId 	= $array['transaction_id'];
+			$message 	= $array['message'];
+			$transaction_status = $array['status'];
+			$merchant_reference	 = $array['transaction_id'];
+			
+			if(!empty($merchant_reference)){
+				$this->v2_model->updatePaymentGateway($jsonString,$merchant_reference);
+				
+				if($transaction_status == 'Success'){
+					$status = 'Success';
+				}elseif($transaction_status == 'Failed'){
+					$status = 'Failed';
+				}else{
+					$status = 'Pending';
+				}
+				$transactionData = [
+					'payment_transaction_id'=>$transactionId,
+					'status'	=>	$status,
+					'message'	=>	$message,
+					'amount'	=>	$amount
+				];
+				$this->v2_model->saveData($transactionData,$merchant_reference);
+				$this->v2_model->sendWebhook($merchant_reference);
+			}
+		}
+	}
+	public function callback_get(){
+		print_r($_GET);
 	}
 }   	   
 ?>
