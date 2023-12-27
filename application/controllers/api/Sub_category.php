@@ -11,12 +11,11 @@ class Sub_category extends REST_Controller {
     }
 
     // Sub_category start
-	public function parent_sub_category_post($id='') {
+	public function parent_sub_category_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
-        $filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->sub_category_model->parent_sub_category($id,$filterData);
+        $final['data'] = $this->sub_category_model->parent_sub_category($id);
         $final['message'] = 'Category parents Sub category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
