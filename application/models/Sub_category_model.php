@@ -45,11 +45,11 @@ class Sub_category_model extends CI_Model {
         }
 
         if(isset($filterData['category_id']) && !empty($filterData['category_id'])){
-            $this->db->like('category_id',$filterData['category_id']);
+            $this->db->where("$this->table.category_id",$filterData['category_id']);
         }
 
         if(isset($filterData['status'])){
-            $this->db->where('status',$filterData['status']);
+            $this->db->where("$this->table.status",$filterData['status']);
         } 
         return $this->db->get()->result();
     }
