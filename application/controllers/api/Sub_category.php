@@ -20,6 +20,7 @@ class Sub_category extends REST_Controller {
         $final['message'] = 'Category parents Sub category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
+   
     public function sub_category_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
         $filterData = json_decode($this->input->raw_input_stream, true);
