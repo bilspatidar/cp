@@ -32,15 +32,28 @@ class Sub_category_model extends CI_Model {
         return $this->db->affected_rows();
     }
 
-    public function get($id='') {
+    public function get($id='',$filterData='') {
         $this->db->select("$this->table.*,(category.name) as category_name");
         $this->db->from($this->table);
 		$this->db->join('category',"category.id=$this->table.category_id");
         if(!empty($id)) {
             $this->db->where($this->table.'.'.$this->primaryKey, $id);
         }
+
+        if(isset($filterData['name']) && !empty($filterData['name'])){
+            $this->db->like("$this->table.name",$filterData['name']);
+        }
+
+        if(isset($filterData['category_id']) && !empty($filterData['category_id'])){
+            $this->db->like('category_id',$filterData['category_id']);
+        }
+
+        if(isset($filterData['status'])){
+            $this->db->where('status',$filterData['status']);
+        } 
         return $this->db->get()->result();
     }
+
 	public function parent_sub_category($id='') {
 		$this->db->select("$this->table.*,(category.name) as category_name");
         $this->db->from($this->table);

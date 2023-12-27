@@ -18,13 +18,14 @@ class Card extends REST_Controller {
 
 	
 		//currency start
-	public function card_get($id=''){   ///list data
+	public function card_list_post($id=''){   ///list data
 		$getTokenData = $this->is_authorized('superadmin');
+		$filterData = json_decode($this->input->raw_input_stream, true);
 		$final = array();
-                $final['status'] = true;
-				$final['data'] = $this->card_model->get($id);
-                $final['message'] = 'Card fetched successfully.';
-                $this->response($final, REST_Controller::HTTP_OK); 
+        $final['status'] = true;
+		$final['data'] = $this->card_model->get($id,$filterData);
+        $final['message'] = 'Card fetched successfully.';
+        $this->response($final, REST_Controller::HTTP_OK); 
 	}	
 	public function card_post($params='') {
         
