@@ -188,7 +188,7 @@ class Test extends REST_Controller {
 	}
 	
 	public function pay_transaction_post($params='') {
-    
+			
             // set validation rules
             $this->form_validation->set_rules('cardnumber', 'Card Number', 'trim|required|numeric');
             $this->form_validation->set_rules('cardholdername', 'Cardholder Name', 'trim|required|alpha_numeric_spaces');

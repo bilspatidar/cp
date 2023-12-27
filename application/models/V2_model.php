@@ -7,8 +7,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class V2_model extends CI_Model {
 
-	protected $table      = 'tempRequest';
+	protected $table      = 'transaction';
 	protected $primaryKey = 'id';
+	protected $token	  = 'token';
 	/**
 	 * __construct function.
 	 * 
@@ -24,6 +25,38 @@ class V2_model extends CI_Model {
 	public function create($data) {
 		$this->db->insert($this->table, $data);
 		return $this->db->insert_id(); 
+	}
+	public function createPaymentGateway($data) {
+		$this->db->select('*');
+		$this->db->from('transaction_payment_gateway');
+		if(isset($data['transaction_id']) && !empty($data['transaction_id'])){
+			$this->db->where('transaction_id',$data['transaction_id']);
+		}
+		if(isset($data['payment_id']) && !empty($data['payment_id'])){
+			$this->db->where('payment_id',$data['payment_id']);
+		}
+		$check = $this->db->get();
+		if($check->num_rows()>0){
+			$id = $check->row()->id;
+			$data['updated'] = date('Y-m-d H:i:s');
+			$this->db->where('id',$id);
+			$this->db->update('transaction_payment_gateway',$data);
+			return $this->db->affected_rows();
+		}else{
+			$this->db->insert('transaction_payment_gateway', $data);
+			return $this->db->insert_id(); 
+		}
+	}
+	
+	public function update($data, $token) {
+        $response = $this->db->update($this->table, $data, array($this->token=>$token));
+        return $this->db->affected_rows();
+    }
+	public function validateToken($token){
+		$this->db->select('*');
+		$this->db->from($this->table);
+		$this->db->where($this->token,$token);
+		return $this->db->get();
 	}
 	public function check_auth_client(){
 		$host =  $_SERVER['HTTP_HOST'];
@@ -129,14 +162,6 @@ class V2_model extends CI_Model {
         }
 	}
 	
-	public function getOrderData($transaction_id,$merchant_id='')
-    {
-		$this->db->select('id,transactionId,merchant_id,mtxnID,amount,status');
-		$this->db->from('orders');
-		$this->db->where('transactionId',$transaction_id);
-		$this->db->or_where('mtxnID',$transaction_id);
-		return $this->db->get();
-    }
 	
 	public function random_key_string($length = 25) {
 		$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -166,64 +191,8 @@ class V2_model extends CI_Model {
 		return $ipaddress;
 	}
 	
-	public function validateTempRequest($enckKey){
-		$this->db->select('*');
-		$this->db->from($this->table);
-		$this->db->where('encKey',$enckKey);
-		return $this->db->get();
-	}
 	
-	public function getPaymentGateway($id,$encrypt_key=''){
-		$this->db->select('id,encrypt_key,name,live_api,live_secret,test_api,test_secret,transaction_charge,live_url,test_url,methodName,daily_limit,amount_mt,base_url');
-		$this->db->from('payment_gateway');
-		$this->db->where('status','Active');
-		$this->db->where('id',$id);
-		if(!empty($encrypt_key)){
-			$this->db->where('encrypt_key',$encrypt_key);
-		}
-		return $this->db->get();
-	}
-	//fetch payment gateway data end
-	//temprequest data update
-	public function updateTempData($array){
-		$tempData['fee']         	= $array['fee'];
-        $tempData['merchant_fee']  	= $array['merchant_fee'];
-        $tempData['payment_id']    	= $array['payment_id'];
-        $tempData['amount']        	= $array['netAmt'];
-		if(!empty($array['ptxnID'])){
-			$tempData['ptxnID']        	= $array['ptxnID'];
-		}
-        $encKey            			= $array['encKey'];
-		$this->db->where('encKey',$encKey);
-		$result = $this->db->update($this->table,$tempData);
-		if($result){
-			return 1;
-		}else{
-			return 0;
-		}
-	}
-	//end temprequest data 
 	
-	public function sendCallback($backUrl,$mtxn_id,$status,$message){
-		
-	return  $form .='<form id="backUrlForm" action="'.$backUrl.'" method="POST" onsubmit="event.preventDefault()">
-			<input type="hidden" name="status" value="'.$status.'" >
-			<input type="hidden" name="message" value="'.$message.'" >
-			<input type="hidden" name="Transaction_id" value="'.$mtxn_id.'" >
-			</form>
-			<script>
-			document.getElementById("backUrlForm").submit();
-			</script>
-			';
-	}
-	
-	public function getTempDataByPtxnid($ptxnID){
-		$this->db->select('*');
-		$this->db->from('tempRequest');
-		$this->db->where('ptxnID',$ptxnID);
-		return $this->db->get();
-	}
-	//end
 	//get webhook url 
 	public function getWebhookUrl($merchant_id,$mid=''){
 		$this->db->select('id,webhook_url');
@@ -237,84 +206,128 @@ class V2_model extends CI_Model {
 	//end
 	public function setResponseString($responseData){
 		$Response = [
-						'transaction_id'=>$responseData['transactionId'],
-						'status'		=>$responseData['status'],
-						'amount'		=>$responseData['amount'],
-						'currency'		=>$responseData['currency'],
-						'email'			=>$responseData['email'],
-						'mode'			=>$responseData['mode'],
-						'phone'			=>$responseData['phone'],
-						'firstname'		=>$responseData['firstname'],
-						'lastname'		=>$responseData['lastname'],
-						'message'		=>$responseData['message']
-						
-					];
+			'transaction_id'=>$responseData['transaction_id'],
+			'status'		=>$responseData['status'],
+			'amount'		=>$responseData['amount'],
+			'currency'		=>$responseData['currency'],
+			'email'			=>$responseData['email'],
+			'phone'			=>$responseData['phone'],
+			'firstname'		=>$responseData['firstname'],
+			'lastname'		=>$responseData['lastname'],
+			'message'		=>$responseData['message']
+			
+		];
 		return $Response;
 	}
-	public function saveOrderData($array){
-		$tempId = $array['tempId'];
-		$temp_payment_id = $this->Common->get_col_by_key('tempRequest','id',$tempId,'payment_id');
-		$payment_name = $this->Common->get_col_by_key('payment_gateway','id',$temp_payment_id,'name');
-		$orderData['fee']               = $this->Common->get_col_by_key('tempRequest','id',$tempId,'fee');
-        $orderData['merchant_fee']      = $array['merchant_fee'];
-        $orderData['payment_id']        = $temp_payment_id;
-        $orderData['amount']            = $array['netAmt'];
-        $orderData['transactionId']     = $array['transactionId'];
-        $orderData['currency']          = $array['currency'];
-        $orderData['email']             = $array['email'];
-        $orderData['mode']              = $array['mode'];
-        $orderData['payment_mode']      = $payment_name;
-        $orderData['order_key']         = $array['order_key'];
-        $orderData['status']            = $array['status'];
-		if(isset($array['transaction_date'])){
-			$orderData['transaction_date']  = $array['transaction_date'];
-			$orderData['from_temp']  = 1;
-			$orderData['tempUpdated']  = date('Y-m-d H:i:s');
-		}else{
-			$orderData['transaction_date']  = $this->Common->get_col_by_key('tempRequest','id',$tempId,'initiated'); //date('Y-m-d H:i:s');
+	
+	public function getPaymentGateway($id,$encrypt_key=''){
+		$this->db->select('id,encrypt_key,name,live_api,live_secret,test_api,test_secret,transaction_charge,live_url,test_url,methodName,daily_limit,amount_mt,base_url');
+		$this->db->from('payment_gateway');
+		$this->db->where('status','Active');
+		$this->db->where('id',$id);
+		if(!empty($encrypt_key)){
+			$this->db->where('encrypt_key',$encrypt_key);
 		}
-        $orderData['merchant_id']       = $array['merchant_id'];
-        $orderData['callbackurl']       = $this->Common->get_col_by_key('tempRequest','id',$tempId,'callbackurl');
-        $orderData['message']           = $array['message'];
-        $orderData['mtxnID']            = $array['mtxnID'];
-        $orderData['requested_phone']   = $array['phone'];
-        $orderData['requested_firstname'] = $array['firstname'];
-        $orderData['requested_lastname']    = $array['lastname'];
-        $orderData['cardType']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardType');
-        $orderData['cardNo']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardNo');
-        $orderData['cardholdername']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardholdername');
-        $orderData['expirymonth']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'expirymonth');
-        $orderData['expiryyear']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'expiryyear');
-        $orderData['cardCVC']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'cardCVC');
-        $orderData['requestMode']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'requestMode');
-        $orderData['mid']    = $this->Common->get_col_by_key('tempRequest','id',$tempId,'mid');
-		$orderData['address'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'address');
-		$orderData['city'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'city');
-		$orderData['state'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'state');
-		$orderData['country'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'country');
-		
-		$orderData['encrypt_key'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'encrypt_key');
-		$orderData['web_url'] = $this->Common->get_col_by_key('tempRequest','id',$tempId,'web_url');
-		
-		$ifAny = $this->db->get_where('orders',array('mtxnID'=>$array['mtxnID']));
-		if($ifAny->num_rows()>0){
-			#return 0;
-			$this->db->where('id',$ifAny->row()->id);
-			$result = $this->db->update('orders',$orderData);
-		    //$tempId = $array['tempId'];
-			$tempdata['dels'] = 1;
-			$this->db->where('id',$tempId);
-			$this->db->update('tempRequest',$tempdata);
-			return 1;
-		}
-		else {
-        $result = $this->db->insert('orders',$orderData);
-		    //$tempId = $array['tempId'];
-			$tempdata['dels'] = 1;
-			$this->db->where('id',$tempId);
-			$this->db->update('tempRequest',$tempdata);
-			return 1;
+		return $this->db->get();
+	}
+	
+	public function sendWebhook($token){
+		$this->db->select('*');
+		$this->db->from($this->table);
+		$this->db->where('token',$token);
+		$check = $this->db->get();
+		if($check->num_rows()>0){
+			$merchant_id = $check->row()->merchant_id;
+			$mid = $check->row()->mid;
+			$getWebhook = $this->getWebhookUrl($merchant_id,$mid);
+			if($getWebhook->num_rows()>0){
+					$webhook_url = $getWebhook->row()->webhook_url;
+					if(!empty($webhook_url)){
+					$webhookResponse = [
+						'transaction_id'=>$check->row()->merchant_transaction_id,
+						'status'		=>$check->row()->status,
+						'amount'		=>$check->row()->amount,
+						'currency'		=>$check->row()->currency,
+						'email'			=>$check->row()->email,
+						'phone'			=>$check->row()->phone,
+						'firstname'	    =>$check->row()->firstname,
+						'lastname'		=>$check->row()->lastname,
+						'message'		=>$check->row()->message,
+					];
+					$merchantResponse = $this->setResponseString($webhookResponse);
+					$url = $webhook_url;
+					$post_data = json_encode($merchantResponse);
+					$headers = [
+					 'Content-Type: application/json',
+					];
+					$curl = curl_init($url);                                                                            
+					curl_setopt($curl, CURLOPT_POST, true);                                                             
+					curl_setopt($curl, CURLOPT_POSTFIELDS,$post_data);                                    
+					curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+					curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+					$response = curl_exec($curl);  
+					curl_close($curl);
+					
+					$merchantWebHook = [
+						'webhook'			=>	$post_data,
+						'webhook_datetime'	=>	date('Y-m-d H:i:s')
+					];
+					$this->v2_model->update($merchantWebHook,$token);
+					}
+				}
 		}
 	}
 	
+	public function sendCallback($paymentCallback,$refrence,$status,$message){
+		$transaction_id = $this->Common->get_col_by_key('transaction','token',$refrence,'id');
+		$payment_id = $this->Common->get_col_by_key('transaction','token',$refrence,'payment_id');
+		$merchant_transaction_id = $this->Common->get_col_by_key('transaction','token',$refrence,'merchant_transaction_id');
+		$callbackurl = $this->Common->get_col_by_key('transaction','token',$refrence,'callbackurl');
+		if(!empty($callbackurl)){
+			$callbackResponse=$callbackurl.'?status='.$status.'&message='.$message.'&Transaction_id='.$merchant_transaction_id;
+			$paymentData = [
+				'transaction_id'	=>	$transaction_id,
+				'payment_id'		=>	$payment_id,
+				'callback'			=>	json_encode($paymentCallback),
+				'callback_datetime'	=>	date('Y-m-d H:i:s')
+			];
+			$this->v2_model->createPaymentGateway($paymentData);
+			$transactionData = [
+				'status'			=>$status,
+				'message'			=>$message,
+				'callback'			=>$callbackResponse,
+				'callback_datetime'	=>	date('Y-m-d H:i:s')
+			];
+			$this->v2_model->update($transactionData,$refrence);
+			return $callbackResponse;
+		}else{
+			return false;
+		}
+	}
+
+	public function updatePaymentGateway($jsonString,$token) {
+		$transaction_id = $this->Common->get_col_by_key('transaction','token',$token,'id');
+		$payment_id = $this->Common->get_col_by_key('transaction','token',$token,'payment_id');
+		$paymentData = [
+			'transaction_id'	=>	$transaction_id,
+			'payment_id'		=>	$payment_id,
+			'webhook'			=>	$jsonString,
+			'webhook_datetime'	=>	date('Y-m-d H:i:s')
+		];
+		$response = $this->v2_model->createPaymentGateway($paymentData);
+		if($response){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	public function saveData($data,$token){
+		$data['transaction_datetime'] = date('Y-m-d H:i:s');
+		$response = $this->v2_model->update($data,$token);
+		if($response){
+			return true;
+		}else{
+			return false;
+		}
+	}
 }
