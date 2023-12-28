@@ -19,6 +19,20 @@ class Transaction extends REST_Controller {
         $final['message'] = 'Transactions fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK);
     }
-
+    
+    public function transaction_detail_post($id) {
+        $getTokenData = $this->is_authorized('superadmin');
+        $final = array();
+        $final['status'] = true;
+        $final['data'] = $this->Transaction_model->getTransactionById($id);
+        
+        if ($final['data']) {
+            $final['message'] = 'Transaction details fetched successfully.';
+            $this->response($final, REST_Controller::HTTP_OK);
+        } else {
+            $final['message'] = 'Transaction not found.';
+            $this->response($final, REST_Controller::HTTP_NOT_FOUND);
+        }
+    }
 }
 

@@ -17,6 +17,21 @@ class Transaction_model extends CI_Model {
         $this->load->database();        
     }
 
+    public function getTransactionById($id) {
+        // Your logic to fetch details for a specific transaction ID
+        $this->db->where('id', $id);
+        $query = $this->db->get('transaction');
+
+        $result = $query->result();
+    
+        if ($query->result()) {
+            return $query->row();
+        } else {
+            return false; 
+        }
+    }
+    
+
     public function getTransaction($filterData) {
         $this->db->select("*");
         $this->db->from($this->table);
