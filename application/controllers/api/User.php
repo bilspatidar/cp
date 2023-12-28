@@ -581,7 +581,7 @@ class User extends REST_Controller {
 		$this->form_validation->set_rules('merchant_id', 'Merchant Id', 'trim|required|numeric');
 		$this->form_validation->set_rules('payment_id[]', 'Payment Id', 'required|numeric');
 		$this->form_validation->set_rules('currency[]','Currency', 'required');
-		$this->form_validation->set_rules('serial_no', 'Serial no', 'numeric');
+		$this->form_validation->set_rules('serial_no[]', 'Serial no', 'numeric');
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
