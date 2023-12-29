@@ -19,17 +19,19 @@ class Transaction_model extends CI_Model {
 
     public function getTransactionById($id) {
         // Your logic to fetch details for a specific transaction ID
-        $this->db->where('id', $id);
-        $query = $this->db->get('transaction');
-
-        $result = $query->result();
+        $this->db->select('*');
+        $this->db->from('transaction');
+        $this->db->where('transaction.id', $id);
+        $this->db->join('transaction_payment_gateway', 'transaction_payment_gateway.transaction_id = transaction.id', 'left');
+        $query = $this->db->get();
     
-        if ($query->result()) {
+        if ($query->num_rows() > 0) {
             return $query->row();
         } else {
-            return false; 
+            return false;
         }
     }
+    
     
 
     public function getTransaction($filterData) {
