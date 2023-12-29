@@ -9,6 +9,10 @@ class Category extends REST_Controller {
      *
      * @return Response
     */
+	
+	function tm_get(){
+		echo"ddd";
+	}
     public function __construct() {
         $this->cors_header();
         parent::__construct();
@@ -35,7 +39,8 @@ class Category extends REST_Controller {
             $_POST = json_decode($this->input->raw_input_stream, true);
 
             // set validation rules
-            $this->form_validation->set_rules('name', 'Category Name', 'trim|required|alpha_numeric_spaces');
+            //$this->form_validation->set_rules('name', 'Category Name', 'trim|required|alpha_numeric_spaces|is_unique[category.name]');
+            //$this->form_validation->set_rules('shortName', 'ShortName', 'trim|required|alpha_numeric_spaces|is_unique[category.shortName]');
             $this->form_validation->set_rules('shortName', 'ShortName', 'trim|required|alpha_numeric_spaces');
             
            
@@ -65,6 +70,23 @@ class Category extends REST_Controller {
                 $data['status'] = 'Active';
                 $data['added'] = date('Y-m-d H:i:s');
                 $data['addedBy'] = $session_id;
+				
+				///image 
+				if(!empty($_POST['image'])){
+				$base64_image = $_POST['image'];
+				$quality = 90;
+                $radioConfig = [
+                'resize' => [
+                'width' => 500,
+                'height' => 300
+                ]
+            // Add more configurations as needed
+                 ];
+				$uploadFolder = 'category'; // Change this to your desired folder name
+
+				$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
+			}
+				////image  
 
                 if ($res = $this->category_model->create($data)) {
                     // category creation ok
@@ -72,10 +94,11 @@ class Category extends REST_Controller {
                     $final['status'] = true;
                     $final['data'] = $this->category_model->get($res);
                     $final['message'] = 'Category created successfully.';
-                    $this->response($final, REST_Controller::HTTP_OK); 
+                    $this->response($data['image'], REST_Controller::HTTP_OK); 
                 } else {
                     // category creation failed, this should never happen
-                    $this->response([ 'status' => FALSE,
+					//$this->response($base64_image, REST_Controller::HTTP_OK);
+					 $this->response([ 'status' => FALSE,
                         'message' =>'Error in submit form',
                         'errors' =>[$this->db->error()]], REST_Controller::HTTP_BAD_REQUEST,'','error');
                 }
