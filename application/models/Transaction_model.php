@@ -35,7 +35,9 @@ class Transaction_model extends CI_Model {
     public function getTransaction($filterData) {
         $this->db->select("*");
         $this->db->from($this->table);
-        if(!empty($id)) {
+        $this->db->join('transaction_payment_gateway', 'transaction_payment_gateway.transaction_id = transaction.id', 'left');
+       
+         if(!empty($id)) {
             $this->db->where($this->primaryKey, $id);
         }
 
