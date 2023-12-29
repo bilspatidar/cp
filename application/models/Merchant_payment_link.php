@@ -38,12 +38,17 @@ class Merchant_payment_link extends CI_Model {
         return $this->db->affected_rows();
     }
 	public function get($id='',$filterData=''){
+
 		$this->db->select("$this->table.*,(users.name) as merchant_name,(payment_gateway.name) as payment_gateway_name");
 		$this->db->from($this->table);
-		$this->db->join('users',"users.users_id=$this->table.merchant_id");
+		$this->db->join('users',"users.users_id=$this->table.merchant_id",'left');
 		$this->db->join('payment_gateway',"payment_gateway.id=$this->table.payment_id",'left');
 		if(!empty($id)){
 			$this->db->where($this->table.'.'.$this->primaryKey,$id);
+		}
+		if(isset($filterData['id']) && !empty($filterData['id'])){
+			
+			$this->db->where_in($this->table.'.'.'id',$filterData['id']);
 		}
 		if(isset($filterData['mid']) && !empty($filterData['mid'])){
 			$this->db->like($this->table.'.'.'mid',$filterData['mid']);
@@ -66,10 +71,10 @@ class Merchant_payment_link extends CI_Model {
 			$this->db->where('CAST('.$this->table.'.'.'added AS DATE)<=',$to_date);
 		}
 		if(isset($filterData['currency']) && !empty($filterData['currency'])){
-			$this->db->where('find_in_set("'.$filterData['currency'].'", '.$this->table.'.currency) <> 0');
+			$this->db->where($this->table.'.currency',$filterData['currency']);
 		}
 		if(isset($filterData['cards']) && !empty($filterData['cards'])){
-			$this->db->where('find_in_set("'.$filterData['cards'].'", '.$this->table.'.cards) <> 0');
+			$this->db->where($this->table.'.cards',$filterData['cards']);
 		}
 		return $this->db->get()->result();
 		

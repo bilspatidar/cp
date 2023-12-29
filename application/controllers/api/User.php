@@ -18,12 +18,8 @@ class User extends REST_Controller {
 		
 		$this->load->model('user_model');
 		$this->load->model('merchant_keys_model');
-
 		$this->load->model('merchant_payment_link');
 		header('Access-Control-Allow-Origin: *');
-
-		$this->load->model('currency_model');
-		$this->load->model('payment_gateway_model');
 		
 	}
 
@@ -583,9 +579,9 @@ class User extends REST_Controller {
 			
 		// set validation rules
 		$this->form_validation->set_rules('merchant_id', 'Merchant Id', 'trim|required|numeric');
-		$this->form_validation->set_rules('payment_id', 'Payment Id', 'required|numeric');
+		$this->form_validation->set_rules('payment_id[]', 'Payment Id', 'required|numeric');
 		$this->form_validation->set_rules('currency[]','Currency', 'required');
-		$this->form_validation->set_rules('mid','MID','trim');
+		$this->form_validation->set_rules('serial_no[]', 'Serial no', 'numeric');
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
@@ -601,39 +597,47 @@ class User extends REST_Controller {
 		} else {
 			
 			// set variables from the form
-			$currency = $this->input->post('currency');
-			if(!empty($currency)){
-			$currencyCode = implode(',',$currency);
-			$data['currency']	= $currencyCode;
-			}
-			$cards = $this->input->post('cards');
-			if(!empty($cards)){
-			$cardsCode = implode(',',$cards);
-			$data['cards']	= $cardsCode;
-			}
-			$mid = $this->input->post('mid');
-			if(!empty($mid)){
-				$data['mid'] = $mid;
-			}
-			$payment_id = $this->input->post('payment_id');
-			if(!empty($payment_id)){
-				$data['payment_id'] = $payment_id;
-			}
-			$merchant_id = $this->input->post('merchant_id');
-			if(!empty($merchant_id)){
-				$data['merchant_id'] = $merchant_id;
-			}
-			$data['status'] = 'Active';
-			$data['added'] = date('Y-m-d H:i:s');
-			$data['addedBy'] = $session_id;
+			$currency = $_POST['currency'];
+			$payment_id = $_POST['payment_id'];
+			$mid = $_POST['mid'];
+			$serial_no = $_POST['serial_no'];
+			$cards = $_POST['cards'];
 			
-			if ($res = $this->merchant_payment_link->create($data)) {
+			$merchant_id = $this->input->post('merchant_id');
+			
+			$lastId = array();
+			for($i=0;$i<count($payment_id);$i++)
+			{
+			    
+				if(!empty($payment_id[$i])){
+					$data['payment_id'] 	= $payment_id[$i];
+				}
+				if(!empty($currency[$i])){
+					$data['currency'] 	= $currency[$i];
+				}
+				if(!empty($mid[$i])){
+					$data['mid'] 	= $mid[$i];
+				}
+				if(!empty($serial_no[$i])){
+					$data['serial_no'] 	= $serial_no[$i];
+				}
+				if(!empty($cards[$i])){
+					$data['cards'] 	= $cards[$i];
+				}
+			    
+			    $data['merchant_id']=$merchant_id;
+				$data['status'] = 'Active';
+				$data['added'] = date('Y-m-d H:i:s');
+				$data['addedBy'] = $session_id;
 				
+			    $res = $this->merchant_payment_link->create($data);
+				$lastId[]= $res;
+			}
+			if ($res) {
 				// user creation ok
-				
                 $final = array();
                 $final['status'] = true;
-				$final['data'] = $this->merchant_payment_link->get($res);
+				$final['data'] = $this->merchant_payment_link->get('',array('id'=>$lastId));
                 $final['message'] = 'Merchant payment link created successfully.';
                 $this->response($final, REST_Controller::HTTP_OK); 
 
@@ -656,6 +660,7 @@ class User extends REST_Controller {
 		// set validation rules
 		$this->form_validation->set_rules('merchant_id', 'Merchant Id', 'trim|required|numeric');
 		$this->form_validation->set_rules('payment_id', 'Payment Id', 'required|numeric');
+		$this->form_validation->set_rules('serial_no', 'Serial no', 'numeric');
 		$this->form_validation->set_rules('mid','MID','trim');
 		if ($this->form_validation->run() === false) {
 			
@@ -674,13 +679,11 @@ class User extends REST_Controller {
 			// set variables from the form
 			$currency = $this->input->post('currency');
 			if(!empty($currency)){
-			$currencyCode = implode(',',$currency);
-			$data['currency']	= $currencyCode;
+			$data['currency']	= $currency;
 			}
 			$cards = $this->input->post('cards');
 			if(!empty($cards)){
-			$cardsCode = implode(',',$cards);
-			$data['cards']	= $cardsCode;
+			$data['cards']	= $cards;
 			}
 			$mid = $this->input->post('mid');
 			if(!empty($mid)){
@@ -693,6 +696,10 @@ class User extends REST_Controller {
 			$merchant_id = $this->input->post('merchant_id');
 			if(!empty($merchant_id)){
 				$data['merchant_id'] = $merchant_id;
+			}
+			$serial_no = $this->input->post('serial_no');
+			if(!empty($serial_no)){
+				$data['serial_no'] = $serial_no;
 			}
 			$status = $this->input->post('status');
 			if(!empty($status)){
