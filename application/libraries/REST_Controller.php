@@ -922,9 +922,10 @@ abstract class REST_Controller extends CI_Controller {
     public function is_authorized($params=''){
 		$headers = $this->input->request_headers(); 
 
-		if (isset($headers['token'])) {		
+	if (isset($headers['token']) || isset($headers['Token'])) {		
+                $key = isset($headers['token']) ? 'token' : 'Token';
 
-			$decodedToken = $this->authorization_token->validateToken($headers['token']);
+			$decodedToken = $this->authorization_token->validateToken($headers[$key]);
 			
             if ($decodedToken['status'])
             {
