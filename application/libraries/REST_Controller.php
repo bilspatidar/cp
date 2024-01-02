@@ -921,11 +921,11 @@ abstract class REST_Controller extends CI_Controller {
 
     public function is_authorized($params=''){
 		$headers = $this->input->request_headers(); 
+        $token =  strtolower($headers['Token']);
+	if (isset($token)) {		
+               
 
-	if (isset($headers['token']) || isset($headers['Token'])) {		
-                $key = isset($headers['token']) ? 'token' : 'Token';
-
-			$decodedToken = $this->authorization_token->validateToken($headers[$key]);
+			$decodedToken = $this->authorization_token->validateToken($token);
 			
             if ($decodedToken['status'])
             {

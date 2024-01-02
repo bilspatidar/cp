@@ -10,9 +10,7 @@ class Category extends REST_Controller {
      * @return Response
     */
 	
-	function tm_get(){
-		echo"ddd";
-	}
+
     public function __construct() {
         $this->cors_header();
         parent::__construct();
@@ -20,11 +18,12 @@ class Category extends REST_Controller {
     }
 
     // Category start
-    public function category_get($id='') {
+    public function category_list_post($id='') {
         $getTokenData = $this->is_authorized('superadmin');
+        $filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->category_model->get($id);
+        $final['data'] = $this->category_model->get($id,$filterData);
         $final['message'] = 'Category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
