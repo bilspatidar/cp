@@ -20,12 +20,11 @@ class Category extends REST_Controller {
     }
 
     // Category start
-    public function category_list_post($id='') {
+    public function category_get($id='') {
         $getTokenData = $this->is_authorized('superadmin');
-        $filterData = json_decode($this->input->raw_input_stream, true);
         $final = array();
         $final['status'] = true;
-        $final['data'] = $this->category_model->get($id,$filterData);
+        $final['data'] = $this->category_model->get($id);
         $final['message'] = 'Category fetched successfully.';
         $this->response($final, REST_Controller::HTTP_OK); 
     }
@@ -39,8 +38,8 @@ class Category extends REST_Controller {
             $_POST = json_decode($this->input->raw_input_stream, true);
 
             // set validation rules
-            //$this->form_validation->set_rules('name', 'Category Name', 'trim|required|alpha_numeric_spaces|is_unique[category.name]');
-            //$this->form_validation->set_rules('shortName', 'ShortName', 'trim|required|alpha_numeric_spaces|is_unique[category.shortName]');
+            $this->form_validation->set_rules('name', 'Category Name', 'trim|required|alpha_numeric_spaces|is_unique[category.name]');
+            $this->form_validation->set_rules('shortName', 'ShortName', 'trim|required|alpha_numeric_spaces|is_unique[category.shortName]');
             $this->form_validation->set_rules('shortName', 'ShortName', 'trim|required|alpha_numeric_spaces');
             
            
@@ -94,7 +93,7 @@ class Category extends REST_Controller {
                     $final['status'] = true;
                     $final['data'] = $this->category_model->get($res);
                     $final['message'] = 'Category created successfully.';
-                    $this->response($data['image'], REST_Controller::HTTP_OK); 
+                    $this->response($final, REST_Controller::HTTP_OK); 
                 } else {
                     // category creation failed, this should never happen
 					//$this->response($base64_image, REST_Controller::HTTP_OK);
