@@ -64,6 +64,7 @@ class Payment_gateway_model extends CI_Model {
 		if(isset($filterData['card']) && !empty($filterData['card'])){
 			$this->db->where('find_in_set("'.$filterData['card'].'", cards) <> 0');
 		}
+		$this->db->order_by($this->primaryKey,'desc');
 		return $this->db->get()->result();
 		
 	}

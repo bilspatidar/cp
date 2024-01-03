@@ -38,6 +38,7 @@ class Pages_model extends CI_Model {
         if(!empty($id)) {
             $this->db->where($this->primaryKey, $id);
         }
+		$this->db->order_by($this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 }

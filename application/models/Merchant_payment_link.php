@@ -76,6 +76,7 @@ class Merchant_payment_link extends CI_Model {
 		if(isset($filterData['cards']) && !empty($filterData['cards'])){
 			$this->db->where($this->table.'.cards',$filterData['cards']);
 		}
+		$this->db->order_by($this->table.'.'.$this->primaryKey,'desc');
 		return $this->db->get()->result();
 		
 	}

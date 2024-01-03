@@ -44,6 +44,7 @@ class Document_category_model extends CI_Model {
 		if(isset($filterData['status']) && !empty($filterData['status'])){
 			$this->db->where('status',$filterData['status']);
 		}
+		$this->db->order_by($this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 }
