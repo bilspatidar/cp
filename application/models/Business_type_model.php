@@ -44,6 +44,7 @@ class Business_type_model extends CI_Model {
 		if(isset($filterData['status'])){
 			$this->db->where('status',$filterData['status']);
 		}
+		$this->db->order_by($this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 }

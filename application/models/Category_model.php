@@ -43,9 +43,10 @@ class Category_model extends CI_Model {
             $this->db->or_like('shortName',$filterData['name']);
         }
 
-        if(isset($filterData['status'])){
+        if(isset($filterData['status']) && !empty($filterData['status'])){
             $this->db->where('status',$filterData['status']);
         }
+		$this->db->order_by($this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 }

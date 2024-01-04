@@ -53,21 +53,19 @@ class Blog_category extends REST_Controller {
                 if (!empty($name)) {
                     $data['name'] = $name;
                 }
-				if (!empty($_POST['image'])) {
+				if(!empty($_POST['image'])){
 					$base64_image = $_POST['image'];
-					$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
-					$image_data = base64_decode($image_data);
-					$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
-					$imageName = $preName."_".time().'.png';
+					$quality = 90;
+					$radioConfig = [
+						'resize' => [
+						'width' => 500,
+						'height' => 300
+						]
+					 ];
+					$uploadFolder = 'blog_category'; 
+
+					$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
 					
-					$uploads_dir = 'uploads/blog_category/';
-					if(!file_exists($uploads_dir)) {
-						mkdir($uploads_dir, 0777, true);  //create directory if not exist
-					}
-						$imageFullPath = $uploads_dir.$imageName;
-					if(file_put_contents($imageFullPath,$image_data)){
-						$data['image'] =  $imageName;
-					}
 				}
 					
 				$data['status'] = 'Active';
@@ -122,32 +120,31 @@ class Blog_category extends REST_Controller {
                 if (!empty($status)) {
                     $data['status'] = $status;
                 }
-				if (!empty($_POST['image'])) {
+				
+				///image 
+				if(!empty($_POST['image'])){
 					$base64_image = $_POST['image'];
-					$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
-					$image_data = base64_decode($image_data);
-					$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
-					$imageName = $preName."_".time().'.png';
+					$quality = 90;
+					$radioConfig = [
+						'resize' => [
+						'width' => 500,
+						'height' => 300
+						]
+					 ];
+					$uploadFolder = 'blog_category'; 
+
+					$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
 					
-					$uploads_dir = 'uploads/blog_category/';
-					if(!file_exists($uploads_dir)) {
-						mkdir($uploads_dir, 0777, true);  //create directory if not exist
-					}
-						$imageFullPath = $uploads_dir.$imageName;
-					if(file_put_contents($imageFullPath,$image_data)){
-						$data['image'] =  $imageName;
-						$imgData = $this->db->get_where('blog_category',array('id'=>$id));
-						if($imgData->num_rows()>0){
-							$img =  $imgData->row()->image;
-							$load_url = 'uploads/blog_category/'.$img;
-							if(file_exists($load_url) && !empty($img))
-							{
-								unlink("uploads/blog_category/".$img);		
-							}
+					$imgData = $this->db->get_where('blog_category',array('id'=>$id));
+					if($imgData->num_rows()>0){
+						$img =  $imgData->row()->image;
+						if(file_exists($img) && !empty($img))
+						{
+							unlink($img);		
 						}
 					}
 				}
-				
+				////image  
                 $data['updatedBy'] = $session_id;
                 $data['updated'] = date('Y-m-d H:i:s');
                 

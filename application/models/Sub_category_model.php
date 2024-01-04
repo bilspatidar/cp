@@ -48,9 +48,10 @@ class Sub_category_model extends CI_Model {
             $this->db->where("$this->table.category_id",$filterData['category_id']);
         }
 
-        if(isset($filterData['status'])){
+        if(isset($filterData['status']) && !empty($filterData['status'])){
             $this->db->where("$this->table.status",$filterData['status']);
         } 
+		$this->db->order_by($this->table.'.'.$this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 
@@ -61,6 +62,7 @@ class Sub_category_model extends CI_Model {
         if(!empty($id)) {
             $this->db->where($this->table.'.'.'category_id', $id);
         }
+		$this->db->order_by($this->table.'.'.$this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 }

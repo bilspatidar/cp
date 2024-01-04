@@ -61,6 +61,7 @@ class Merchant_keys_model extends CI_Model {
 			$to_date = date('Y-m-d',strtotime($filterData['to_date']));
 			$this->db->where('CAST('.$this->table.'.'.'added AS DATE)<=',$to_date);
 		}
+		$this->db->order_by($this->table.'.'.$this->primaryKey,'desc');
 		return $this->db->get()->result();
 		
 	}

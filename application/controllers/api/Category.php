@@ -141,7 +141,32 @@ class Category extends REST_Controller {
                 if (!empty($status)) {
                     $data['status'] = $status;
                 }
-        
+				
+				///image 
+				if(!empty($_POST['image'])){
+				$base64_image = $_POST['image'];
+				$quality = 90;
+                $radioConfig = [
+                'resize' => [
+                'width' => 500,
+                'height' => 300
+                ]
+            // Add more configurations as needed
+                 ];
+				$uploadFolder = 'category'; // Change this to your desired folder name
+
+				$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
+				
+				$imgData = $this->db->get_where('category',array('id'=>$id));
+				if($imgData->num_rows()>0){
+					$img =  $imgData->row()->image;
+					if(file_exists($img) && !empty($img))
+					{
+						unlink($img);		
+					}
+				}
+			}
+				////image  
                 $data['updatedBy'] = $session_id;
                 $data['updated'] = date('Y-m-d H:i:s');
                 $id = $this->input->post('id');

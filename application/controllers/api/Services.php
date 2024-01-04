@@ -57,21 +57,20 @@ class Services extends REST_Controller {
                 if (!empty($description)) {
                     $data['description'] = $description;
                 }
-				if (!empty($_POST['image'])) {
+				
+				if(!empty($_POST['image'])){
 					$base64_image = $_POST['image'];
-					$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
-					$image_data = base64_decode($image_data);
-					$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
-					$imageName = $preName."_".time().'.png';
+					$quality = 90;
+					$radioConfig = [
+						'resize' => [
+						'width' => 500,
+						'height' => 300
+						]
+					 ];
+					$uploadFolder = 'services'; 
+
+					$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
 					
-					$uploads_dir = 'uploads/services/';
-					if(!file_exists($uploads_dir)) {
-						mkdir($uploads_dir, 0777, true);  //create directory if not exist
-					}
-						$imageFullPath = $uploads_dir.$imageName;
-					if(file_put_contents($imageFullPath,$image_data)){
-						$data['image'] =  $imageName;
-					}
 				}
 					
 				$data['status'] = 'Active';
@@ -130,28 +129,25 @@ class Services extends REST_Controller {
                 if (!empty($status)) {
                     $data['status'] = $status;
                 }
-				if (!empty($_POST['image'])) {
+				if(!empty($_POST['image'])){
 					$base64_image = $_POST['image'];
-					$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
-					$image_data = base64_decode($image_data);
-					$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
-					$imageName = $preName."_".time().'.png';
+					$quality = 90;
+					$radioConfig = [
+						'resize' => [
+						'width' => 500,
+						'height' => 300
+						]
+					 ];
+					$uploadFolder = 'services'; 
+
+					$data['image'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
 					
-					$uploads_dir = 'uploads/services/';
-					if(!file_exists($uploads_dir)) {
-						mkdir($uploads_dir, 0777, true);  //create directory if not exist
-					}
-						$imageFullPath = $uploads_dir.$imageName;
-					if(file_put_contents($imageFullPath,$image_data)){
-						$data['image'] =  $imageName;
-						$imgData = $this->db->get_where('services',array('id'=>$id));
-						if($imgData->num_rows()>0){
-							$img =  $imgData->row()->image;
-							$load_url = 'uploads/services/'.$img;
-							if(file_exists($load_url) && !empty($img))
-							{
-								unlink("uploads/services/".$img);		
-							}
+					$imgData = $this->db->get_where('services',array('id'=>$id));
+					if($imgData->num_rows()>0){
+						$img =  $imgData->row()->image;
+						if(file_exists($img) && !empty($img))
+						{
+							unlink($img);		
 						}
 					}
 				}

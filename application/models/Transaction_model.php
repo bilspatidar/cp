@@ -40,30 +40,30 @@ class Transaction_model extends CI_Model {
         $this->db->join('transaction_payment_gateway', 'transaction_payment_gateway.transaction_id = transaction.id', 'left');
        
          if(!empty($id)) {
-            $this->db->where($this->primaryKey, $id);
+            $this->db->where($this->table.'.'.$this->primaryKey, $id);
         }
 
         if(isset($filterData['id']) && !empty($filterData['id'])){
-			$this->db->like('id',$filterData['id']);
+			$this->db->where($this->table.'.id',$filterData['id']);
 		}
 
         if(isset($filterData['merchant_id']) && !empty($filterData['merchant_id'])){
-			$this->db->like('merchant_id',$filterData['merchant_id']);
+			$this->db->where($this->table.'.merchant_id',$filterData['merchant_id']);
 		}
 
         if(isset($filterData['transaction_datetime']) && !empty($filterData['transaction_datetime'])){
-			$this->db->like('transaction_datetime',$filterData['transaction_datetime']);
+			$this->db->where($this->table.'.transaction_datetime',$filterData['transaction_datetime']);
 		}
 
         if(isset($filterData['payment_id']) && !empty($filterData['payment_id'])){
-			$this->db->like('payment_id',$filterData['payment_id']);
+			$this->db->where($this->table.'.payment_id',$filterData['payment_id']);
 		}
 
         
         if(isset($filterData['status']) && !empty($filterData['status'])){
-			$this->db->like('status',$filterData['status']);
+			$this->db->where($this->table.'.status',$filterData['status']);
 		}
-
+		$this->db->order_by($this->table.'.'.$this->primaryKey,'desc');
         return $this->db->get()->result();
     }
 

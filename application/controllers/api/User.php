@@ -1020,33 +1020,31 @@ class User extends REST_Controller {
 					$data['email'] = $this->input->post('email');
 					$users_id = $this->input->post('users_id');
 					// Handle image upload
-					//$image_data = base64_decode(str_replace('data:image/jpeg;base64,', '', $base64_image));
-					if (!empty($_POST['profile_pic'])) {
-						$base64_image = $_POST['profile_pic'];
-						$image_data = str_replace('data:image/jpeg;base64,', '', $base64_image);
-						$image_data = base64_decode($image_data);
-						$preName =  substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'),1,6);
-						$imageName = $preName."_".time().'.png';
-						
-						$uploads_dir = 'uploads/users/';
-						if(!file_exists($uploads_dir)) {
-							mkdir($uploads_dir, 0777, true);  //create directory if not exist
-						}
-							$imageFullPath = $uploads_dir.$imageName;
-						if(file_put_contents($imageFullPath,$image_data)){
-							$data['profile_pic'] =  $imageName;
-							$imgData = $this->db->get_where('users',array('users_id'=>$users_id));
-							if($imgData->num_rows()>0){
-								$profile_pic =  $imgData->row()->profile_pic;
-								$load_url2 = $uploads_dir.$profile_pic;
-								if(file_exists($load_url2) && !empty($profile_pic))
-								{
-									unlink($uploads_dir.$profile_pic);		
-								}
-							}
+					
+					///image 
+				if(!empty($_POST['profile_pic'])){
+					$base64_image = $_POST['profile_pic'];
+					$quality = 90;
+					$radioConfig = [
+						'resize' => [
+						'width' => 500,
+						'height' => 300
+						]
+					 ];
+					$uploadFolder = 'users'; 
+
+					$data['profile_pic'] = $this->upload_media->upload_and_save($base64_image, $quality, $radioConfig, $uploadFolder);
+					
+					$imgData = $this->db->get_where('users',array('users_id'=>$users_id));
+					if($imgData->num_rows()>0){
+						$img =  $imgData->row()->profile_pic;
+						if(file_exists($img) && !empty($img))
+						{
+							unlink($img);		
 						}
 					}
-					
+				}
+				////image
 					// populate $data array with the values from the form fields
 					$data['updatedBy'] = $session_id;
 					$data['updated'] = date('Y-m-d H:i:s');
