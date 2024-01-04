@@ -125,7 +125,7 @@
             <p class="h8 py-3">Payment Details</p>
 			<?php 	$cardnumber     = $this->encrypt->decode($row[0]->cardnumber);
 					$cardcvv        = $this->encrypt->decode($row[0]->cardcvv);?>
-			<form class="card-details " action="http://localhost/cp/api/test/pay_transaction" method="post">
+			<form class="card-details " action="<?php echo base_url();?>api/test/pay_transaction" method="post">
 			<input type="hidden" name="id" value="<?php echo $row[0]->id;?>">
 			<input type="hidden" name="token" value="<?php echo $row[0]->token;?>">
 			<input type="hidden" name="callbackurl" value="<?php echo $row[0]->callbackurl;?>">

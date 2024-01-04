@@ -273,6 +273,7 @@ class V2_model extends CI_Model {
 						'webhook_datetime'	=>	date('Y-m-d H:i:s')
 					];
 					$this->v2_model->update($merchantWebHook,$token);
+					return $merchantResponse;
 					}
 				}
 		}
