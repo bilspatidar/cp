@@ -199,7 +199,7 @@ class V2_model extends CI_Model {
 		$this->db->from('merchant_keys');
 		$this->db->where('merchant_id',$merchant_id);
 		if(!empty($mid)){
-			$this->db->where('title',$mid);
+			$this->db->where('mid',$mid);
 		}
 		return $this->db->get();
 	}
@@ -273,6 +273,7 @@ class V2_model extends CI_Model {
 						'webhook_datetime'	=>	date('Y-m-d H:i:s')
 					];
 					$this->v2_model->update($merchantWebHook,$token);
+					return $merchantResponse;
 					}
 				}
 		}

@@ -169,7 +169,7 @@ class Test extends REST_Controller {
 				];
 				$this->test_model->updateData($updateData);
 				
-				redirect('http://localhost/cp/api/test/test_transactions/'.$token);
+				redirect(base_url().'api/test/test_transactions/'.$token);
 			
 		}else{
 			$this->response([ 'status' => FALSE, 'message' =>'Invalid Token.','errors' =>['Invalid Token.']], REST_Controller::HTTP_NOT_ACCEPTABLE,'','error');

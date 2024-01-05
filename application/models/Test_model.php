@@ -38,7 +38,7 @@ class Test_model extends CI_Model {
 		$this->db->join('merchant_keys','users.users_id = merchant_keys.merchant_id');
         $this->db->where('merchant_keys.api_key',$api_key);
 		if(!empty($mid)){
-			$this->db->where('merchant_keys.title',$mid);
+			$this->db->where('merchant_keys.mid',$mid);
 		}
         $this->db->where('users.isDelete',0);
         $this->db->where('users.status','Active');
@@ -141,7 +141,7 @@ class Test_model extends CI_Model {
 		$this->db->from('merchant_keys');
 		$this->db->where('merchant_id',$merchant_id);
 		if(!empty($mid)){
-			$this->db->where('title',$mid);
+			$this->db->where('mid',$mid);
 		}
 		return $this->db->get();
 	}
