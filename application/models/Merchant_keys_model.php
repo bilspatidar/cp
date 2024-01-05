@@ -45,7 +45,7 @@ class Merchant_keys_model extends CI_Model {
 			$this->db->where($this->table.'.'.$this->primaryKey,$id);
 		}
 		if(isset($filterData['title']) && !empty($filterData['title'])){
-			$this->db->like($this->table.'.'.'title',$filterData['title']);
+			$this->db->like($this->table.'.'.'mid',$filterData['title']);
 		}
 		if(isset($filterData['merchant_id']) && !empty($filterData['merchant_id'])){
 			$this->db->where($this->table.'.'.'merchant_id',$filterData['merchant_id']);
@@ -68,11 +68,11 @@ class Merchant_keys_model extends CI_Model {
 	public function generateMid()
     {
 		$mid = 'MID-';
-        $this->db->select("title");
+        $this->db->select("mid");
 		$this->db->from($this->table);
 		$check = $this->db->get();
 		if($check->num_rows()>0){
-			$title = $check->row()->title;
+			$title = $check->row()->mid;
 			$generateMid = $mid.rand(10,100);
 			if($title==$generateMid){
 				return $mid.rand(10,100);

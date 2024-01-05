@@ -199,7 +199,7 @@ class V2_model extends CI_Model {
 		$this->db->from('merchant_keys');
 		$this->db->where('merchant_id',$merchant_id);
 		if(!empty($mid)){
-			$this->db->where('title',$mid);
+			$this->db->where('mid',$mid);
 		}
 		return $this->db->get();
 	}

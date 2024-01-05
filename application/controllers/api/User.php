@@ -70,7 +70,7 @@ class User extends REST_Controller {
 			if ($res = $this->user_model->create_user($data)) {
 				if($data['user_type']=='merchant'){
 				$data2['merchant_id'] = $res;
-				$data2['title'] = 'Api-keys';
+				$data2['mid'] = $this->merchant_keys_model->generateMid();
 				$data2['api_key'] = $this->Common->GenerateLiveAPI();
 				$data2['added'] = date('Y-m-d H:i:s');
 				$data2['added_by'] = $res;
@@ -147,6 +147,11 @@ class User extends REST_Controller {
 		$this->form_validation->set_rules('company_name','Company Name','alpha_numeric_spaces');
 		$this->form_validation->set_rules('websiteURL','Website URL','valid_url');
 		//$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
+		$this->form_validation->set_rules('merchant_pay_in_charge', 'Merchant pay in charge', 'numeric'); 
+		$this->form_validation->set_rules('merchant_pay_out_charge', 'Merchant pay out charge', 'numeric'); 
+		$this->form_validation->set_rules('settelment_charge', 'Settelment charge', 'numeric'); 
+		$this->form_validation->set_rules('turnover', 'Turnover', 'numeric'); 
+		$this->form_validation->set_rules('chargeback_percentage', 'Chargeback percentage', 'numeric'); 
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
@@ -227,6 +232,26 @@ class User extends REST_Controller {
 			if(!empty($websiteURL)){
 				$data['websiteURL'] = $websiteURL;
 			}
+			$merchant_pay_in_charge = $this->input->post('merchant_pay_in_charge');
+			if(!empty($merchant_pay_in_charge)){
+				$data['merchant_pay_in_charge'] = $merchant_pay_in_charge;
+			}
+			$merchant_pay_out_charge = $this->input->post('merchant_pay_out_charge');
+			if(!empty($merchant_pay_out_charge)){
+				$data['merchant_pay_out_charge'] = $merchant_pay_out_charge;
+			}
+			$settelment_charge = $this->input->post('settelment_charge');
+			if(!empty($settelment_charge)){
+				$data['settelment_charge'] = $settelment_charge;
+			}
+			$turnover = $this->input->post('turnover');
+			if(!empty($turnover)){
+				$data['turnover'] = $turnover;
+			}
+			$chargeback_percentage = $this->input->post('chargeback_percentage');
+			if(!empty($chargeback_percentage)){
+				$data['chargeback_percentage'] = $chargeback_percentage;
+			}
 			$business_registered = $this->input->post('business_registered');
 			if(!empty($business_registered)){
 				$data['business_registered'] = date('Y-m-d',strtotime($business_registered));
@@ -241,7 +266,7 @@ class User extends REST_Controller {
 				
 				// user creation ok
 				$data2['merchant_id'] = $res;
-				$data2['title'] = $this->merchant_keys_model->generateMid();
+				$data2['mid'] = $this->merchant_keys_model->generateMid();
 				$data2['api_key'] = $this->Common->GenerateLiveAPI();
 				$data2['added'] = date('Y-m-d H:i:s');
 				$data2['added_by'] = $session_id;
@@ -280,6 +305,11 @@ class User extends REST_Controller {
 		$this->form_validation->set_rules('company_name','Company Name','alpha_numeric_spaces');
 		$this->form_validation->set_rules('websiteURL','Website URL','valid_url');
 		//$this->form_validation->set_rules('business_registered', 'Business Registered', 'callback_date_valid'); 
+		$this->form_validation->set_rules('merchant_pay_in_charge', 'Merchant pay in charge', 'numeric'); 
+		$this->form_validation->set_rules('merchant_pay_out_charge', 'Merchant pay out charge', 'numeric'); 
+		$this->form_validation->set_rules('settelment_charge', 'Settelment charge', 'numeric'); 
+		$this->form_validation->set_rules('turnover', 'Turnover', 'numeric'); 
+		$this->form_validation->set_rules('chargeback_percentage', 'Chargeback percentage', 'numeric'); 
 		if ($this->form_validation->run() === false) {
 			
 			// validation not ok, send validation errors to the view
@@ -365,7 +395,26 @@ class User extends REST_Controller {
 			if(!empty($business_registered)){
 				$data['business_registered'] = date('Y-m-d',strtotime($business_registered));
 			}
-			
+			$merchant_pay_in_charge = $this->input->post('merchant_pay_in_charge');
+			if(!empty($merchant_pay_in_charge)){
+				$data['merchant_pay_in_charge'] = $merchant_pay_in_charge;
+			}
+			$merchant_pay_out_charge = $this->input->post('merchant_pay_out_charge');
+			if(!empty($merchant_pay_out_charge)){
+				$data['merchant_pay_out_charge'] = $merchant_pay_out_charge;
+			}
+			$settelment_charge = $this->input->post('settelment_charge');
+			if(!empty($settelment_charge)){
+				$data['settelment_charge'] = $settelment_charge;
+			}
+			$turnover = $this->input->post('turnover');
+			if(!empty($turnover)){
+				$data['turnover'] = $turnover;
+			}
+			$chargeback_percentage = $this->input->post('chargeback_percentage');
+			if(!empty($chargeback_percentage)){
+				$data['chargeback_percentage'] = $chargeback_percentage;
+			}
 			if(!empty($this->input->post('status'))){
 			$data['status'] = $this->input->post('status');
 			}
@@ -446,7 +495,7 @@ class User extends REST_Controller {
 			// set variables from the form
 			$title = $this->input->post('title');
 			if(!empty($title)){
-				$data['title'] = $title;
+				$data['mid'] = $title;
 			}
 			$webhook_url = $this->input->post('webhook_url');
 			if(!empty($webhook_url)){
@@ -512,7 +561,7 @@ class User extends REST_Controller {
 			}
 			$title = $this->input->post('title');
 			if(!empty($title)){
-				$data['title'] = $title;
+				$data['mid'] = $title;
 			}
 			$webhook_url = $this->input->post('webhook_url');
 			if(!empty($webhook_url)){

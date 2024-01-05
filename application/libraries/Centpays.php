@@ -29,7 +29,7 @@ class Centpays{
 				$live_url 	    = $payment->row()->live_url;
 				$payment_charge = $payment->row()->transaction_charge;
 				
-				$merchant_transaction_charge = $this->CI->Common->get_col_by_key('users','users_id',$merchant_id,'transaction_charge');
+				$merchant_transaction_charge = $this->CI->Common->get_col_by_key('users','users_id',$merchant_id,'merchant_pay_in_charge');
 				$merchant_fee =  $amount*$merchant_transaction_charge/100;
 				$fee =  $amount*$payment_charge/100;
 				$netAmt = $amount-$merchant_fee;
