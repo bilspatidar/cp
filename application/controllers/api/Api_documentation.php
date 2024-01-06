@@ -134,10 +134,10 @@ class Api_documentation extends REST_Controller {
             $_POST = json_decode($this->input->raw_input_stream, true);
         
             // set validation rules
-            $this->form_validation->set_rules('method', 'Method Name', 'trim|required|alpha_numeric_spaces');
+            $this->form_validation->set_rules('method', 'Method Name', 'trim|alpha_numeric_spaces');
             $this->form_validation->set_rules('menu_name', 'Menu Name', 'trim|required|alpha_numeric_spaces');
             $this->form_validation->set_rules('title', 'Title', 'trim|required|alpha_numeric_spaces');
-            $this->form_validation->set_rules('url', 'Url', 'trim|required|valid_url');
+            $this->form_validation->set_rules('url', 'Url', 'trim|valid_url');
             $this->form_validation->set_rules('header', 'Header', 'trim');
             $this->form_validation->set_rules('request', 'Request', 'trim');
             $this->form_validation->set_rules('response', 'Response', 'trim');
