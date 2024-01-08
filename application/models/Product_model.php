@@ -52,6 +52,24 @@ class Product_model extends CI_Model {
 			$this->db->like("$this->table.name",$filterData['name']);
 			$this->db->or_like("$this->table.short_name",$filterData['name']);
 		}
+		if(isset($filterData['type']) && !empty($filterData['type'])){
+			$this->db->like("$this->table.type",$filterData['type']);
+		}
+		if(isset($filterData['barcode']) && !empty($filterData['barcode'])){
+			$this->db->like("$this->table.barcode",$filterData['barcode']);
+		}
+		if(isset($filterData['category_id']) && !empty($filterData['category_id'])){
+			$this->db->where("$this->table.category_id",$filterData['category_id']);
+		}
+		if(isset($filterData['subcategory_id']) && !empty($filterData['subcategory_id'])){
+			$this->db->where("$this->table.subcategory_id",$filterData['subcategory_id']);
+		}
+		if(isset($filterData['brand_id']) && !empty($filterData['brand_id'])){
+			$this->db->where("$this->table.brand_id",$filterData['brand_id']);
+		}
+		if(isset($filterData['unit_id']) && !empty($filterData['unit_id'])){
+			$this->db->where("$this->table.unit_id",$filterData['unit_id']);
+		}
 		if(isset($filterData['status']) && !empty($filterData['status'])){
 			$this->db->where("$this->table.status",$filterData['status']);
 		}
