@@ -139,3 +139,6 @@ define('VENDOR_FEE','944');
 
 define('OFFICE_START','10:00');
 define('OFFICE_END','19:00');
+
+define('VOUCHER_SRNO','10000');
+define('GST_SRNO','10000');
